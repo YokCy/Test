@@ -1,0 +1,67 @@
+# ローカル開発環境一式を `docker compose up` の一手で起動するための定義。
+# frontend/backend/dbの3サービス構成。通知機能（推奨機能）を実装する段になれば
+# 前プロジェクト（claudeTest/uniteboard）同様にredis/BullMQを追加検討する。
+
+services:
+  # PostgreSQL本体。タイムゾーンをAsia/Tokyoに固定する
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: eventboard
+      POSTGRES_PASSWORD: eventboard
+      POSTGRES_DB: eventboard
+      TZ: Asia/Tokyo
+    ports:
+      # ホストの5432はローカルインストール済みPostgreSQLサービスと競合するため5433で公開する
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventboard -d eventboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # バックエンドAPI（NestJS, watchモード）
+  backend:
+    build:
+      # WHY: backendはpnpm workspaceの一員として`@eventboard/shared`（workspace:^）に依存するため、
+      # ビルドコンテキストは`./backend`単体ではなくリポジトリルートにする必要がある。
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - .env
+    environment:
+      # .envのDATABASE_URLはホストから直接prisma CLI等を叩く用途のためlocalhostを指す。
+      # コンテナ内からはサービス名(db)で名前解決する必要があるためここで上書きする。
+      DATABASE_URL: postgresql://eventboard:eventboard@db:5432/eventboard?schema=public
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app/backend
+      - /app/node_modules
+      - /app/backend/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # フロントエンド（Vite dev server）
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    environment:
+      # WHY: ブラウザから直接叩くURLのため、コンテナ間名前解決用のサービス名(backend:3000)ではなく
+      # ホストに公開されているポートを指定する。
+      VITE_API_BASE_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/node_modules
+      - /app/frontend/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

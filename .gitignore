@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+.env
+!.env.example
+
+# Prisma
+backend/prisma/dev.db
+
+# エディタ・OS
+.DS_Store
+Thumbs.db
+
+# Playwright（frontend/tests）
+frontend/test-results/
+frontend/playwright-report/
+frontend/tests/.auth/
+frontend/blob-report/

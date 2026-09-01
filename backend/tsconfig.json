@@ -1,0 +1,27 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "ES2022",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    // WHY: incremental:trueとnest-cli.jsonのdeleteOutDir:trueを併用すると、`dist/`を削除した後も
+    // `tsconfig.tsbuildinfo`（増分ビルドキャッシュ）が残ったままになり、再ビルド時にtscが
+    // 「変更なし」と誤認してJS出力をスキップしてしまう不具合（Phase 12実装時に実際に発生）があるため無効化する。
+    "verbatimModuleSyntax": false
+  },
+  // WHY: frontend/vite.config.tsと同じ理由（Windowsホスト→Linuxコンテナのbind mountでは
+  // ファイル変更のinotifyイベントが伝播しない）で、`nest start --watch`のtsc watcherが
+  // ホスト側の編集を検知できない問題があるため、ポーリング監視に切り替える。
+  "watchOptions": {
+    "watchFile": "fixedPollingInterval",
+    "watchDirectory": "fixedPollingInterval",
+    "fallbackPolling": "fixedinterval"
+  },
+  "include": ["src/**/*.ts"]
+}

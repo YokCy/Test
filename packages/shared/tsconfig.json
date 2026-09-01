@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "ES2022",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    // module:"node16"はpackage.jsonに"type":"module"を持たない本パッケージでは
+    // 各ファイルのimpliedNodeFormatをCommonJSと解釈するため、verbatimModuleSyntax(base側でtrue)を
+    // 継承したままだと値のexport（例: Zodスキーマ）が「CommonJSファイルでのESM export構文」として
+    // コンパイルエラーになる。backend/tsconfig.jsonが同じ理由で明示的にfalseへ上書きしている前例に合わせる。
+    "verbatimModuleSyntax": false
+  },
+  "include": ["src/**/*.ts"]
+}
