@@ -33,6 +33,19 @@ export function Header() {
         <Link to={ROUTES.home} className="text-lg font-semibold text-slate-900">
           EventBoard
         </Link>
+        <nav className="flex items-center gap-3 text-sm text-slate-600">
+          <Link to={ROUTES.events} className="hover:text-slate-900">
+            イベント一覧
+          </Link>
+          <Link to={ROUTES.myPage} className="hover:text-slate-900">
+            マイページ
+          </Link>
+          {user.role === "ADMIN" && (
+            <Link to={ROUTES.adminCategories} className="hover:text-slate-900">
+              カテゴリ管理
+            </Link>
+          )}
+        </nav>
       </div>
 
       <div className="relative">

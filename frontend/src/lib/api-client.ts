@@ -53,6 +53,13 @@ async function rawRequest<T>(method: string, path: string, options: RequestOptio
 
   const response = await fetch(`${API_BASE_URL}${path}`, init);
 
+  // WHY: `204 No Content`（例: DELETE /categories/:id, MANIFEST.md 6章 #13）はFetch仕様上
+  // レスポンスボディが強制的に空になり、`response.json()`を呼ぶとパースエラーになるため先に分岐する。
+  // 成功系のみが204を返す想定のため、ここに到達した時点で`payload.success`相当はtrueとして扱ってよい。
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const payload = (await response.json()) as ApiResponse<T>;
 
   if (!payload.success) {
