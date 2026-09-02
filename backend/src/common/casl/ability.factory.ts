@@ -13,7 +13,7 @@ import type { AuthUser } from "../auth/auth-user.type";
  */
 export type AppAction = "manage" | "read" | "create" | "update" | "delete";
 
-export type AppSubjects = "User" | "all";
+export type AppSubjects = "User" | "Category" | "all";
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;
 
@@ -35,11 +35,14 @@ export class CaslAbilityFactory {
 
     if (user.role === "ADMIN") {
       can("manage", "User");
+      can("manage", "Category");
       return Promise.resolve(build());
     }
 
     // memberは自分自身の情報のみ閲覧可（ドメインモデル追加時にこのファクトリを拡張していく）
     can("read", "User");
+    // カテゴリ一覧はイベント一覧・作成フォームの絞り込みで全member共通に必要なため閲覧のみ許可する
+    can("read", "Category");
 
     return Promise.resolve(build());
   }

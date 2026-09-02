@@ -72,15 +72,19 @@ Phase 12で結合確認する。
 
 ---
 
-## Phase 6: カテゴリ管理API（`/categories`）【並列実装可・Phase 5完了後】
+## Phase 6: カテゴリ管理API（`/categories`）【並列実装可・Phase 5完了後・完了】
 
-- [ ] 6.1 `packages/shared`にカテゴリ作成/更新のZodスキーマを定義する
-- [ ] 6.2 `CategoriesModule`・`CategoriesController`・`CategoriesService`の雛形を作成する
-- [ ] 6.3 `GET /categories`を実装する（紐づくイベント数を含める、[画面設計仕様.md 3.1.8節](画面設計仕様.md)）
-- [ ] 6.4 `POST /categories`を実装する（admin限定、同名`409`）
-- [ ] 6.5 `PUT /categories/:id`を実装する（admin限定、同名`409`）
-- [ ] 6.6 `DELETE /categories/:id`を実装する（admin限定、`onDelete: Restrict`由来のFK制約違反をcatchし`409`へ変換）
-- [ ] 6.7 `CaslAbilityFactory`に`Category` subjectの権限判定（admin=`manage`、member=`read`）を追加する
+- [x] 6.1 `packages/shared`にカテゴリ作成/更新のZodスキーマを定義する
+- [x] 6.2 `CategoriesModule`・`CategoriesController`・`CategoriesService`の雛形を作成する
+- [x] 6.3 `GET /categories`を実装する（紐づくイベント数を含める、[画面設計仕様.md 3.1.8節](画面設計仕様.md)）
+- [x] 6.4 `POST /categories`を実装する（admin限定、同名`409`）
+- [x] 6.5 `PUT /categories/:id`を実装する（admin限定、同名`409`）
+- [x] 6.6 `DELETE /categories/:id`を実装する（admin限定、`onDelete: Restrict`由来のFK制約違反をcatchし`409`へ変換）
+- [x] 6.7 `CaslAbilityFactory`に`Category` subjectの権限判定（admin=`manage`、member=`read`）を追加する
+
+> 動作確認済み: 一覧/作成/同名`409`/更新/削除/存在しないID削除`404`/member権限での作成`403`/未認証`401`。
+> `AppModule`へは並列実装を待たずこの時点で登録済み（今回は単一セッションでの逐次実装のため、
+> Phase 11の「まとめて登録」という前提とは異なりPhase実装ごとに随時登録する運用とした）。
 
 ## Phase 7: イベント基本API（`/events`）【並列実装可・Phase 5完了後】
 

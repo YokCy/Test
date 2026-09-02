@@ -10,3 +10,7 @@ export type { LoginInput, UpdateProfileInput } from "./schemas/auth";
 // ユーザー管理API（/users/*）用スキーマ
 export { UpdateUserRoleSchema } from "./schemas/users";
 export type { UpdateUserRoleInput } from "./schemas/users";
+
+// カテゴリ管理API（/categories/*）用スキーマ
+export { CreateCategorySchema, UpdateCategorySchema } from "./schemas/categories";
+export type { CreateCategoryInput, UpdateCategoryInput } from "./schemas/categories";

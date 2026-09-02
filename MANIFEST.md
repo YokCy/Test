@@ -670,7 +670,8 @@ model Feedback {
 
 * 概要: カテゴリマスタの一覧を取得する。
 * 認可: 要認証（全ロール）
-* Success `200`: `data`は`{ id, name }`の配列
+* Success `200`: `data`は`{ id, name, eventCount }`の配列（`eventCount`は紐づくイベント数。削除可否の
+  参考情報であり、論理削除済みイベントも含めて数える。画面設計仕様.md 3.1.8節参照）
 * Errors: `401`
 
 #### 11. POST /categories
