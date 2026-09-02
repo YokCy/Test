@@ -137,7 +137,8 @@ Phase 12で結合確認する。
 
 - [x] 11.1 `AppModule`に新規モジュール（Categories/Events/Registrations/Feedbacks/MyPage）を一括登録する
 - [x] 11.2 全体の型チェック・Lint（`pnpm --filter backend build` / `lint`）を実行し、並列実装間の型不整合（Zodスキーマの重複定義等）を解消する（レビューで発見した`EventsController`のPUT/DELETEの`@CheckPolicies`コピペミス、`MyPageService.getStats`の論理削除フィルタ漏れを修正済み）
-- [ ] 11.3 `pnpm --filter backend test`で既存＋新規テストを一括実行する（新規モジュールにユニットテストが未整備のため保留。テスト追加は別タスクとする）
+- [x] 11.3 `pnpm --filter backend test`で既存＋新規テストを一括実行する
+  > `backend-unit-test-perspectives.md`（MANIFEST.md API設計・データモデリングセクション基準の観点整理）を基に、`test-agent`サブエージェント4並列（auth/users/categories、events、registrations、feedbacks/my-page）でユニットテストを新規作成。全7モジュール・142件（`npx jest`一括実行）が全て成功、`tsc --noEmit`・ESLintともにクリーン。認可（唯一のAdmin降格禁止等）・バリデーション異常系・キャンセル待ちFIFO/繰り上げトランザクション・主催者暗黙確定・出席率ゼロ除算・フィードバック匿名判定/`isMine`等のビジネスルール分岐を実装コードと突き合わせて検証し、プロダクションコードのバグは発見されなかった。
 
 ## Phase 12: 結合確認【直列・Phase 11完了後、frontend-tasks.md Phase 12と合わせて実施】
 
