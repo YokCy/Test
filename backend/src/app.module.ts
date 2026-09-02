@@ -6,15 +6,17 @@ import { validateEnv } from "./common/config/env.schema";
 import { GuardsModule } from "./common/guards/guards.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { CategoriesModule } from "./modules/categories/categories.module";
+import { EventsModule } from "./modules/events/events.module";
+import { FeedbacksModule } from "./modules/feedbacks/feedbacks.module";
+import { MyPageModule } from "./modules/my-page/my-page.module";
+import { RegistrationsModule } from "./modules/registrations/registrations.module";
 import { UsersModule } from "./modules/users/users.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
 /**
  * アプリケーションのルートモジュール。
- * 認証・認可基盤（AuthInfraModule/GuardsModule）は今後追加する全リソースモジュールが
- * 前提とする共通基盤のため先行登録している。
- * イベント・参加登録・出席・フィードバック等の残りのリソースモジュールは、
- * backend-tasks.md Phase 7〜10の実装が完了次第ここへ追加していく。
+ * backend-tasks.md Phase 6〜10（カテゴリ・イベント・参加登録/出席・フィードバック・マイページ）の
+ * 実装が完了したため、ここに一括登録している。
  */
 @Module({
   imports: [
@@ -28,6 +30,10 @@ import { PrismaModule } from "./prisma/prisma.module";
     AuthModule,
     UsersModule,
     CategoriesModule,
+    EventsModule,
+    RegistrationsModule,
+    FeedbacksModule,
+    MyPageModule,
   ],
 })
 export class AppModule {}

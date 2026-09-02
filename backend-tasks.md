@@ -86,62 +86,62 @@ Phase 12で結合確認する。
 > `AppModule`へは並列実装を待たずこの時点で登録済み（今回は単一セッションでの逐次実装のため、
 > Phase 11の「まとめて登録」という前提とは異なりPhase実装ごとに随時登録する運用とした）。
 
-## Phase 7: イベント基本API（`/events`）【並列実装可・Phase 5完了後】
+## Phase 7: イベント基本API（`/events`）【並列実装可・Phase 5完了後・完了】
 
-- [ ] 7.1 `packages/shared`にイベント作成/更新のZodスキーマを定義する（title/description/categoryId/tags/startAt/endAt/capacity/registrationDeadline/cancellationDeadline）
-- [ ] 7.2 `EventsModule`・`EventsController`・`EventsService`の雛形を作成する
-- [ ] 7.3 `GET /events`を実装する（カテゴリ絞り込み・キーワード検索・タグ検索・開催日順ソート、論理削除済み除外）
-- [ ] 7.4 `POST /events`を実装する（`organizerId`=実行者自動設定、`startAt`過去日時`400`判定、タグの`upsert`）
-- [ ] 7.5 `registrationState`計算ロジック（`NOT_REGISTERED`/`CONFIRMED`/`WAITLISTED`/`ORGANIZER`/`CLOSED`）を共通関数として実装する（[画面設計仕様.md 3.2節](画面設計仕様.md)）
-- [ ] 7.6 `GET /events/:id`を実装する（参加者リスト・空き状況・`registrationState`・平均評価集計を含める）
-- [ ] 7.7 `PUT /events/:id`を実装する（主催者本人/admin限定、`startAt`変更時の`hasRegisteredParticipants`判定含む）
-- [ ] 7.8 `DELETE /events/:id`を実装する（論理削除、主催者本人/admin限定）
-- [ ] 7.9 `CaslAbilityFactory`に`Event` subject（`organizerId`条件）の権限判定を追加する
+- [x] 7.1 `packages/shared`にイベント作成/更新のZodスキーマを定義する（title/description/categoryId/tags/startAt/endAt/capacity/registrationDeadline/cancellationDeadline）
+- [x] 7.2 `EventsModule`・`EventsController`・`EventsService`の雛形を作成する
+- [x] 7.3 `GET /events`を実装する（カテゴリ絞り込み・キーワード検索・タグ検索・開催日順ソート、論理削除済み除外）
+- [x] 7.4 `POST /events`を実装する（`organizerId`=実行者自動設定、`startAt`過去日時`400`判定、タグの`upsert`）
+- [x] 7.5 `registrationState`計算ロジック（`NOT_REGISTERED`/`CONFIRMED`/`WAITLISTED`/`ORGANIZER`/`CLOSED`）を共通関数として実装する（[画面設計仕様.md 3.2節](画面設計仕様.md)）
+- [x] 7.6 `GET /events/:id`を実装する（参加者リスト・空き状況・`registrationState`・平均評価集計を含める）
+- [x] 7.7 `PUT /events/:id`を実装する（主催者本人/admin限定、`startAt`変更時の`hasRegisteredParticipants`判定含む）
+- [x] 7.8 `DELETE /events/:id`を実装する（論理削除、主催者本人/admin限定）
+- [x] 7.9 ~~`CaslAbilityFactory`に`Event` subject（`organizerId`条件）の権限判定を追加する~~ → 実装時に方針変更。「主催者本人か」はデータ依存でCASLの静的な`can()`では表現できないため、CASLでは`read`/`create`のみ付与し、編集・削除の所有関係チェックは`EventsService`内の手動比較（`event.organizerId === user.id`）で行う方式にした（CODING_STANDARDS 3章の方針通り）
 
-## Phase 8: 参加登録・キャンセル・出席管理API【並列実装可・Phase 5完了後】
+## Phase 8: 参加登録・キャンセル・出席管理API【並列実装可・Phase 5完了後・完了】
 
 > 8.5〜8.6（繰り上げ処理）が本プロジェクトで最も複雑度の高い箇所。他タスクより時間を多めに見積もる。
 
-- [ ] 8.1 `packages/shared`に出席マークのZodスキーマ（`attendanceStatus`）を定義する
-- [ ] 8.2 `RegistrationsModule`・`RegistrationsController`・`RegistrationsService`の雛形を作成する（`/events`パス配下のサブリソースとして実装）
-- [ ] 8.3 `POST /events/:id/register`を実装する（過去イベント`400`、締切超過`400`、主催者本人`409`、二重登録`409`）
-- [ ] 8.4 待機登録時の`position`採番ロジック（当該イベントの現在最大`position` + 1）を実装する
-- [ ] 8.5 `POST /events/:id/cancel`を実装する（本人はキャンセル期限内のみ、adminは`userId`指定で期限無視の強制キャンセル）
-- [ ] 8.6 キャンセル時の繰り上げトランザクションを実装する（イベント行ロック→`Registration`削除→先頭待機者昇格→`PromotionHistory`保存、[MANIFEST.md 3.6節](MANIFEST.md)）
-- [ ] 8.7 `GET /events/:id/registrations`を実装する（主催者本人/admin限定、出席状態含む）
-- [ ] 8.8 `PUT /events/:id/registrations/:userId/attendance`を実装する（開催日時前`400`、主催者本人/admin限定、マーク後の変更許可）
-- [ ] 8.9 `CaslAbilityFactory`に`Registration` subjectの権限判定を追加する
+- [x] 8.1 `packages/shared`に出席マークのZodスキーマ（`attendanceStatus`）を定義する
+- [x] 8.2 `RegistrationsModule`・`RegistrationsController`・`RegistrationsService`の雛形を作成する（`/events`パス配下のサブリソースとして実装）
+- [x] 8.3 `POST /events/:id/register`を実装する（過去イベント`400`、締切超過`400`、主催者本人`409`、二重登録`409`）
+- [x] 8.4 待機登録時の`position`採番ロジック（当該イベントの現在最大`position` + 1）を実装する
+- [x] 8.5 `POST /events/:id/cancel`を実装する（本人はキャンセル期限内のみ、adminは`userId`指定で期限無視の強制キャンセル）
+- [x] 8.6 キャンセル時の繰り上げトランザクションを実装する（イベント行ロック→`Registration`削除→先頭待機者昇格→`PromotionHistory`保存、[MANIFEST.md 3.6節](MANIFEST.md)）
+- [x] 8.7 `GET /events/:id/registrations`を実装する（主催者本人/admin限定、出席状態含む）
+- [x] 8.8 `PUT /events/:id/registrations/:userId/attendance`を実装する（開催日時前`400`、主催者本人/admin限定、マーク後の変更許可）
+- [x] 8.9 ~~`CaslAbilityFactory`に`Registration` subjectの権限判定を追加する~~ → Phase 7と同じ理由でCASLでは判定せず、`RegistrationsService`内の手動チェック（主催者本人/admin、または本人の登録か）に統一した
 
-## Phase 9: フィードバックAPI（`/events/:id/feedbacks`, `/feedbacks/:id`）【並列実装可・Phase 5完了後】
+## Phase 9: フィードバックAPI（`/events/:id/feedbacks`, `/feedbacks/:id`）【並列実装可・Phase 5完了後・完了】
 
 > 投稿条件（開催終了済み＋`ATTENDED`）の判定はPhase 8の出席マーク実装と結合して初めて実地検証できるが、
 > コード自体は`Registration`テーブルを直接参照するため、モジュール実装自体はPhase 8と並列に進められる。
 
-- [ ] 9.1 `packages/shared`にフィードバック投稿/編集のZodスキーマ（`rating`(1〜5)/`comment`/`isAnonymous`）を定義する
-- [ ] 9.2 `FeedbacksModule`・`FeedbacksController`・`FeedbacksService`の雛形を作成する
-- [ ] 9.3 `GET /events/:id/feedbacks`を実装する（平均評価算出、非公開分除外、匿名投稿者の出し分け、adminは全件+投稿者情報表示）
-- [ ] 9.4 `POST /events/:id/feedbacks`を実装する（投稿条件判定: 開催終了済み＋`ATTENDED`、1人1件`409`）
-- [ ] 9.5 `PUT /feedbacks/:id`を実装する（投稿者本人限定）
-- [ ] 9.6 `POST /feedbacks/:id/hide`を実装する（admin限定）
-- [ ] 9.7 `CaslAbilityFactory`に`Feedback` subjectの権限判定を追加する
+- [x] 9.1 `packages/shared`にフィードバック投稿/編集のZodスキーマ（`rating`(1〜5)/`comment`/`isAnonymous`）を定義する
+- [x] 9.2 `FeedbacksModule`・`FeedbacksController`・`FeedbacksService`の雛形を作成する（`/events/:id/feedbacks`用と`/feedbacks/:id`用の2つのControllerを1モジュールにまとめる構成）
+- [x] 9.3 `GET /events/:id/feedbacks`を実装する（平均評価算出、非公開分除外、匿名投稿者の出し分け、adminは全件+投稿者情報表示）
+- [x] 9.4 `POST /events/:id/feedbacks`を実装する（投稿条件判定: 開催終了済み＋`ATTENDED`、1人1件`409`）
+- [x] 9.5 `PUT /feedbacks/:id`を実装する（投稿者本人限定）
+- [x] 9.6 `POST /feedbacks/:id/hide`を実装する（admin限定）
+- [x] 9.7 `CaslAbilityFactory`に`Feedback` subjectの権限判定を追加する（admin=`manage`のみ。投稿・閲覧・自分の投稿編集はデータ依存のためService内の手動チェック）
 
-## Phase 10: マイページ集計API（`/users/me/events`, `/users/me/stats`）【並列実装可・Phase 5完了後】
+## Phase 10: マイページ集計API（`/users/me/events`, `/users/me/stats`）【並列実装可・Phase 5完了後・完了】
 
-- [ ] 10.1 `MyPageModule`（または`UsersModule`への追加）・Controller・Serviceの雛形を作成する
-- [ ] 10.2 `GET /users/me/events`を実装する（主催イベント・参加予定・参加履歴の3区分クエリ）
-- [ ] 10.3 `GET /users/me/stats`を実装する（累計参加数・出席率（未マーク除外）・カテゴリ別集計）
+- [x] 10.1 `MyPageModule`・`MyPageController`（`@Controller("users/me")`、`UsersController`とは別クラスでルーティング衝突を回避）・`MyPageService`の雛形を作成する
+- [x] 10.2 `GET /users/me/events`を実装する（主催イベント・参加予定・参加履歴の3区分クエリ）
+- [x] 10.3 `GET /users/me/stats`を実装する（累計参加数・出席率（未マーク除外）・カテゴリ別集計）
 
 ---
 
-## Phase 11: モジュール統合【直列・Phase 6〜10完了後】
+## Phase 11: モジュール統合【直列・Phase 6〜10完了後・完了】
 
-- [ ] 11.1 `AppModule`に新規モジュール（Categories/Events/Registrations/Feedbacks/MyPage）を一括登録する
-- [ ] 11.2 全体の型チェック・Lint（`pnpm --filter backend build` / `lint`）を実行し、並列実装間の型不整合（Zodスキーマの重複定義等）を解消する
-- [ ] 11.3 `pnpm --filter backend test`で既存＋新規テストを一括実行し、モジュール間結合の問題がないか確認する
+- [x] 11.1 `AppModule`に新規モジュール（Categories/Events/Registrations/Feedbacks/MyPage）を一括登録する
+- [x] 11.2 全体の型チェック・Lint（`pnpm --filter backend build` / `lint`）を実行し、並列実装間の型不整合（Zodスキーマの重複定義等）を解消する（レビューで発見した`EventsController`のPUT/DELETEの`@CheckPolicies`コピペミス、`MyPageService.getStats`の論理削除フィルタ漏れを修正済み）
+- [ ] 11.3 `pnpm --filter backend test`で既存＋新規テストを一括実行する（新規モジュールにユニットテストが未整備のため保留。テスト追加は別タスクとする）
 
 ## Phase 12: 結合確認【直列・Phase 11完了後、frontend-tasks.md Phase 12と合わせて実施】
 
-- [ ] 12.1 `docker compose up --build`でdb/backend/frontend一式が起動することを確認する
-- [ ] 12.2 seedデータ投入後、主要フロー（ログイン→イベント作成→参加登録→出席マーク→フィードバック投稿）を手動で一通り疎通確認する
-- [ ] 12.3 満席時のキャンセル待ち登録→キャンセル→自動繰り上げのシナリオを手動確認する
-- [ ] 12.4 カテゴリ削除（紐づくイベントあり）が`409`になることを確認する
+- [x] 12.1 `docker compose up -d db` + ローカルの`nest start`でbackend単体の起動を確認する（frontend込みの`docker compose up --build`はfrontend実装後に改めて実施）
+- [x] 12.2 seedデータ投入後、主要フロー（ログイン→イベント作成→参加登録→出席マーク→フィードバック投稿）を手動で一通り疎通確認する
+- [x] 12.3 満席時のキャンセル待ち登録→キャンセル→自動繰り上げのシナリオを手動確認する（`PromotionHistory`のDB保存も確認済み）
+- [x] 12.4 カテゴリ削除（紐づくイベントあり）が`409`になることを確認する

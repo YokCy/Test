@@ -13,7 +13,7 @@ import type { AuthUser } from "../auth/auth-user.type";
  */
 export type AppAction = "manage" | "read" | "create" | "update" | "delete";
 
-export type AppSubjects = "User" | "Category" | "all";
+export type AppSubjects = "User" | "Category" | "Event" | "Feedback" | "all";
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;
 
@@ -36,6 +36,8 @@ export class CaslAbilityFactory {
     if (user.role === "ADMIN") {
       can("manage", "User");
       can("manage", "Category");
+      can("manage", "Event");
+      can("manage", "Feedback");
       return Promise.resolve(build());
     }
 
@@ -43,6 +45,13 @@ export class CaslAbilityFactory {
     can("read", "User");
     // カテゴリ一覧はイベント一覧・作成フォームの絞り込みで全member共通に必要なため閲覧のみ許可する
     can("read", "Category");
+    // イベントの閲覧・作成はロールに関わらず全員可。編集・削除は「主催者本人か」という
+    // データ依存の条件になるため、CASLの静的な条件では表現しきれず、EventsServiceで
+    // `event.organizerId === user.id`を直接判定する（CODING_STANDARDS 3章の方針）。
+    can(["read", "create"], "Event");
+    // フィードバックの投稿・閲覧・自分の投稿の編集はデータ依存の条件（投稿者本人か等）のため
+    // FeedbacksServiceで直接判定する。ここでは「不適切レビューの非公開化」がadmin専用の
+    // 純粋なロールチェックであることのみを表現する（memberには何も付与しない）。
 
     return Promise.resolve(build());
   }

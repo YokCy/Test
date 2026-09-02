@@ -14,3 +14,15 @@ export type { UpdateUserRoleInput } from "./schemas/users";
 // カテゴリ管理API（/categories/*）用スキーマ
 export { CreateCategorySchema, UpdateCategorySchema } from "./schemas/categories";
 export type { CreateCategoryInput, UpdateCategoryInput } from "./schemas/categories";
+
+// イベント管理API（/events/*）用スキーマ
+export { CreateEventSchema, UpdateEventSchema } from "./schemas/events";
+export type { CreateEventInput, UpdateEventInput } from "./schemas/events";
+
+// 参加登録・キャンセル・出席管理API用スキーマ
+export { MarkAttendanceSchema, CancelRegistrationSchema } from "./schemas/registrations";
+export type { MarkAttendanceInput, CancelRegistrationInput } from "./schemas/registrations";
+
+// フィードバックAPI（/events/:id/feedbacks, /feedbacks/*）用スキーマ
+export { CreateFeedbackSchema, UpdateFeedbackSchema } from "./schemas/feedbacks";
+export type { CreateFeedbackInput, UpdateFeedbackInput } from "./schemas/feedbacks";
