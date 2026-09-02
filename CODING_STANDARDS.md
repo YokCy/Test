@@ -168,7 +168,7 @@ import type { CreateEventInput } from "@eventboard/shared";
 
 ### ディレクトリ構成
 
-[CLAUDE.md](CLAUDE.md)「ディレクトリ構成」で定義されたfeature-based構成に従う。新規画面・モーダルは対応する
+[MANIFEST.md 8章「ディレクトリ構成」](MANIFEST.md)で定義されたfeature-based構成に従う。新規画面・モーダルは対応する
 `features/*` 配下に配置し、横断的な共通コンポーネントのみ `components/ui/` に置く。
 
 ```
@@ -338,7 +338,7 @@ useEffect(() => {
 
 ### ディレクトリ構成
 
-[CLAUDE.md](CLAUDE.md)「ディレクトリ構成」の通り、NestJSモジュールを[MANIFEST.md 6章](MANIFEST.md)の
+[MANIFEST.md 8章「ディレクトリ構成」](MANIFEST.md)の通り、NestJSモジュールを[MANIFEST.md 6章](MANIFEST.md)の
 主要リソース区分と1:1に対応させる。
 
 ```

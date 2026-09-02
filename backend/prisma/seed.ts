@@ -11,10 +11,31 @@ const BCRYPT_SALT_ROUNDS = 10;
 // admin@example.comの認証情報はSEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD（.env）で別管理する。
 const SAMPLE_MEMBER_PASSWORD = "Password123!";
 
-/** 全テーブルのデータを削除する。イベント関連モデル追加時は依存の末端から順に追加すること。 */
+/** カテゴリマスタの初期値（要件定義4-3節「カテゴリ・タグ」で定められた既定カテゴリ）。 */
+const INITIAL_CATEGORY_NAMES = ["勉強会", "懇親会", "講演会", "研修", "その他"];
+
+/** 全テーブルのデータを削除する。依存の末端（子テーブル）から順に削除する。 */
 async function resetDatabase() {
-  await prisma.$transaction([prisma.refreshToken.deleteMany(), prisma.user.deleteMany()]);
+  await prisma.$transaction([
+    prisma.feedback.deleteMany(),
+    prisma.promotionHistory.deleteMany(),
+    prisma.registration.deleteMany(),
+    prisma.eventTag.deleteMany(),
+    prisma.event.deleteMany(),
+    prisma.tag.deleteMany(),
+    prisma.category.deleteMany(),
+    prisma.refreshToken.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
   console.log("既存データを全削除しました。");
+}
+
+/** カテゴリマスタの初期値を投入する。 */
+async function seedCategories() {
+  await Promise.all(
+    INITIAL_CATEGORY_NAMES.map((name) => prisma.category.upsert({ where: { name }, update: {}, create: { name } })),
+  );
+  console.log(`カテゴリマスタを${INITIAL_CATEGORY_NAMES.length}件投入しました。`);
 }
 
 /**
@@ -69,6 +90,7 @@ async function seedSampleMembers() {
 
 async function main() {
   await resetDatabase();
+  await seedCategories();
   await seedAdmin();
   await seedSampleMembers();
 }

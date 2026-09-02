@@ -412,7 +412,7 @@ erDiagram
 
 ### 5.4 Prismaスキーマ（追加分）
 
-`User`/`RefreshToken`は実装済み（[CLAUDE.md](./CLAUDE.md)参照）。以下を追加する。
+`User`/`RefreshToken`は実装済み（[backend/prisma/schema.prisma](./backend/prisma/schema.prisma)参照）。以下を追加する。
 
 ```prisma
 enum RegistrationStatus {
@@ -812,20 +812,51 @@ model Feedback {
 
 ## 7. 技術スタック
 
-[CLAUDE.md](./CLAUDE.md)「技術スタック」章を参照。要点のみ再掲する。
+- モノレポ: pnpm workspace + turbo（`backend` / `frontend` / `packages/shared`）
+- バックエンド: NestJS + Prisma + PostgreSQL
+  - 認証: JWT（Access/Refresh Token、httpOnly Cookie） + passport-jwt
+  - 認可: CASL（`backend/src/common/casl/ability.factory.ts`）
+  - バリデーション: Zod（`packages/shared`で共有） + nestjs-zod
+  - パスワードハッシュ: bcrypt
+- フロントエンド: Vite + React + TypeScript + Tailwind CSS
+  - ルーティング: React Router
+  - サーバー状態管理: TanStack Query
+  - フォーム: React Hook Form + Zod
+- テスト: バックエンド=Jest、フロントエンド=Vitest（ユニット）+ Playwright（E2E）
+- ローカル開発: docker-compose（db / backend / frontend）
+- バージョン管理: Git（単一リポジトリ、納品はGitHubへのアップロード）
 
-- モノレポ: pnpm workspace + turbo
-- BE: NestJS + Prisma + PostgreSQL、JWT(Access+Refresh)、CASL、bcrypt、Zod(nestjs-zod)
-- FE: Vite + React + TypeScript + Tailwind、React Router、TanStack Query、React Hook Form + Zod
-- テスト: Jest(backend) / Vitest+Playwright(frontend)
-- 通知基盤(BullMQ/Redis/メール送信)は今回未導入（5章「機能要件」の通り通知機能は対象外）
+通知基盤（BullMQ/Redis/メール送信）は今回未導入（3章「通知システム」の通り通知機能は対象外）。
+各ライブラリの具体的なバージョンは[技術スタック.md](./技術スタック.md)を参照。
 
 ---
 
 ## 8. ディレクトリ構成
 
-[CLAUDE.md](./CLAUDE.md)「ディレクトリ構成」章を参照。イベント関連の新規モジュールは
-`backend/src/modules/{categories,events,registrations,feedbacks}`のように機能単位で追加していく。
+```
+backend/
+  src/
+    common/         # 認証(JWT)・認可(CASL)・設定・フィルタ・ガード等の共通基盤
+    modules/        # リソースごとのモジュール（auth, users は実装済み。categories/events/registrations/feedbacks等は今後追加）
+    prisma/         # PrismaService/PrismaModule
+  prisma/
+    schema.prisma   # Prismaスキーマ（User/RefreshToken + イベントドメイン一式が実装済み）
+    seed.ts
+frontend/
+  src/
+    components/ui/     # 汎用UIコンポーネント（Button, Modal, Toast等）
+    components/layout/ # AppLayout, Header
+    features/       # 機能単位のディレクトリ（api.ts, components/, hooks/）。auth のみ実装済み
+    router/         # ルート定義・認証ガード
+    lib/            # APIクライアント等
+packages/shared/
+  src/
+    schemas/        # フロント・バック共有のZodスキーマ
+    types/          # 共有型定義
+```
+
+イベント関連の新規モジュールは`backend/src/modules/{categories,events,registrations,feedbacks}`の
+ように機能単位で追加していく（詳細は[CODING_STANDARDS.md](./CODING_STANDARDS.md) 2章・3章参照）。
 
 ---
 

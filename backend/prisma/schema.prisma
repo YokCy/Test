@@ -1,7 +1,5 @@
 // backend/prisma/schema.prisma で一元管理するPrismaスキーマ定義。
-// User/RefreshTokenは認証基盤（backend/src/common/auth）が前提とする最小限のモデル。
-// Event/Category/Registration/Attendance/Feedback等のドメインモデルは、
-// 初期選定要素リスト.md の議論確定後にここへ追加する。
+// MANIFEST.md 5章のデータモデリングに基づく。
 
 datasource db {
   provider = "postgresql"
@@ -21,21 +19,37 @@ enum SystemRole {
   MEMBER
 }
 
+enum RegistrationStatus {
+  CONFIRMED
+  WAITLISTED
+}
+
+enum AttendanceStatus {
+  ATTENDED
+  ABSENT
+}
+
 // ------------------------------
 // Models
 // ------------------------------
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   name         String
   passwordHash String
   role         SystemRole @default(MEMBER)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @db.Timestamptz(3)
 
   refreshTokens RefreshToken[]
+
+  organizedEvents          Event[]            @relation("EventOrganizer")
+  registrations            Registration[]
+  feedbacks                Feedback[]
+  promotionsReceived       PromotionHistory[] @relation("PromotionPromotedUser")
+  promotionsCausedByCancel PromotionHistory[] @relation("PromotionVacatedByUser")
 
   @@map("users")
 }
@@ -52,4 +66,115 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Category {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  events Event[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  name String @unique
+
+  eventTags EventTag[]
+
+  @@map("tags")
+}
+
+model EventTag {
+  eventId String
+  tagId   String
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, tagId])
+  @@index([tagId])
+  @@map("event_tags")
+}
+
+model Event {
+  id                   String    @id @default(cuid())
+  title                String
+  description          String?
+  categoryId           String
+  organizerId          String
+  startAt              DateTime  @db.Timestamptz(3)
+  endAt                DateTime? @db.Timestamptz(3)
+  capacity             Int
+  registrationDeadline DateTime? @db.Timestamptz(3)
+  cancellationDeadline DateTime? @db.Timestamptz(3)
+  deletedAt            DateTime? @db.Timestamptz(3)
+  createdAt            DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @db.Timestamptz(3)
+
+  category  Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  organizer User     @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Restrict)
+
+  eventTags          EventTag[]
+  registrations      Registration[]
+  feedbacks          Feedback[]
+  promotionHistories PromotionHistory[]
+
+  @@index([categoryId])
+  @@index([organizerId])
+  @@index([startAt])
+  @@map("events")
+}
+
+model Registration {
+  id               String             @id @default(cuid())
+  eventId          String
+  userId           String
+  status           RegistrationStatus
+  position         Float?
+  attendanceStatus AttendanceStatus?
+  createdAt        DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(3)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId, status, position])
+  @@index([userId])
+  @@map("registrations")
+}
+
+model PromotionHistory {
+  id              String   @id @default(cuid())
+  eventId         String
+  promotedUserId  String
+  vacatedByUserId String
+  promotedAt      DateTime @default(now()) @db.Timestamptz(3)
+
+  event         Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  promotedUser  User  @relation("PromotionPromotedUser", fields: [promotedUserId], references: [id], onDelete: Cascade)
+  vacatedByUser User  @relation("PromotionVacatedByUser", fields: [vacatedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("promotion_histories")
+}
+
+model Feedback {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String
+  rating      Int
+  comment     String
+  isAnonymous Boolean  @default(false)
+  isHidden    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@map("feedbacks")
 }

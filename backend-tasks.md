@@ -54,21 +54,21 @@ Phase 12で結合確認する。
 
 ---
 
-## Phase 5: Prismaスキーマ追加・マイグレーション【直列・Phase 6〜10全ての前提】
+## Phase 5: Prismaスキーマ追加・マイグレーション【直列・Phase 6〜10全ての前提・完了】
 
 > このPhaseは全ての新規モジュールが依存する共通の土台のため、並列実装の前に必ず完了させる。
 > 1人が担当し、完了後にPhase 6〜10を複数人/複数エージェントへ割り当てる。
 
-- [ ] 5.1 `schema.prisma`に`RegistrationStatus`/`AttendanceStatus` Enumを追加する（[MANIFEST.md 5.4節](MANIFEST.md)）
-- [ ] 5.2 `Category`モデルを追加する
-- [ ] 5.3 `Tag`・`EventTag`モデルを追加する
-- [ ] 5.4 `Event`モデルを追加する（`categoryId`/`organizerId`の`onDelete: Restrict`含む）
-- [ ] 5.5 `Registration`モデルを追加する（`@@unique([eventId, userId])`含む）
-- [ ] 5.6 `PromotionHistory`モデルを追加する（`promotedUser`/`vacatedByUser`の関係名指定含む）
-- [ ] 5.7 `Feedback`モデルを追加する（`@@unique([eventId, userId])`含む）
-- [ ] 5.8 `User`モデルに逆リレーション（`organizedEvents`, `registrations`, `feedbacks`, `promotionsReceived`, `promotionsCausedByCancel`）を追加する
-- [ ] 5.9 `pnpm --filter backend prisma migrate dev`でマイグレーションを作成・適用する
-- [ ] 5.10 `seed.ts`にカテゴリマスタ初期値（勉強会/懇親会/講演会/研修/その他）の投入処理を追加する
+- [x] 5.1 `schema.prisma`に`RegistrationStatus`/`AttendanceStatus` Enumを追加する（[MANIFEST.md 5.4節](MANIFEST.md)）
+- [x] 5.2 `Category`モデルを追加する
+- [x] 5.3 `Tag`・`EventTag`モデルを追加する
+- [x] 5.4 `Event`モデルを追加する（`categoryId`/`organizerId`の`onDelete: Restrict`含む）
+- [x] 5.5 `Registration`モデルを追加する（`@@unique([eventId, userId])`含む）
+- [x] 5.6 `PromotionHistory`モデルを追加する（`promotedUser`/`vacatedByUser`の関係名指定含む）
+- [x] 5.7 `Feedback`モデルを追加する（`@@unique([eventId, userId])`含む）
+- [x] 5.8 `User`モデルに逆リレーション（`organizedEvents`, `registrations`, `feedbacks`, `promotionsReceived`, `promotionsCausedByCancel`）を追加する
+- [x] 5.9 `pnpm --filter backend prisma migrate dev`でマイグレーションを作成・適用する（`20260901235226_add_event_domain`）
+- [x] 5.10 `seed.ts`にカテゴリマスタ初期値（勉強会/懇親会/講演会/研修/その他）の投入処理を追加する
 
 ---
 
