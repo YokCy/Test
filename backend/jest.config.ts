@@ -2,17 +2,17 @@ import type { Config } from "jest";
 
 /**
  * backend配下のユニットテスト実行設定。
- * WHY: 本プロジェクトのバックエンドテストは本来コロケーション配置（`*.spec.ts`）だが、
- * test-agent運用ではユーザー指示により `src/tests/*.test.ts` に集約する。tsconfig.json の `module: "node16"` /
- * `moduleResolution: "node16"` をそのままts-jestに渡すとCommonJS実行環境のJestと
- * 相性が悪い（`node16`はファイル単位でESM/CJSを切り替える設定であり、Jestの
+ * CODING_STANDARDS.md 6章「ファイル構成」の通り、テスト対象と同じディレクトリへのコロケーション
+ * 配置（例: `events.service.ts` → `events.service.spec.ts`）とする。
+ * WHY: tsconfig.json の `module: "node16"` / `moduleResolution: "node16"` をそのままts-jestに渡すと
+ * CommonJS実行環境のJestと相性が悪い（`node16`はファイル単位でESM/CJSを切り替える設定であり、Jestの
  * requireベースの読み込みと衝突しうる）ため、テスト変換時のみcommonjs/nodeへ上書きする。
  */
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
   rootDir: ".",
-  testMatch: ["<rootDir>/src/tests/**/*.test.ts"],
+  testMatch: ["<rootDir>/src/**/*.spec.ts"],
   setupFiles: ["reflect-metadata"],
   transform: {
     "^.+\\.tsx?$": [
