@@ -5,7 +5,6 @@ import { Link, useParams } from "react-router-dom";
 
 import { Spinner } from "../../../components/ui/Spinner";
 import { apiClient } from "../../../lib/api-client";
-import { useMe } from "../../auth/hooks/useMe";
 import { useEventFeedbacks } from "../hooks/useEventFeedbacks";
 import { useSubmitFeedback } from "../hooks/useSubmitFeedback";
 import { useUpdateFeedback } from "../hooks/useUpdateFeedback";
@@ -33,25 +32,18 @@ function useFeedbackEventHeader(eventId: string) {
 
 /**
  * P-08 フィードバック投稿画面（画面設計仕様.md 3.1.7節、`/events/:eventId/feedback`）。
- *
- * 既知の制約: 「投稿済みかどうか」の判定は`GET /events/:id/feedbacks`のレスポンスの中から
- * `author?.id === me.id`のフィードバックを探すことで行っている。この方法はadmin閲覧時、および
- * 非匿名投稿の場合には正しく機能するが、**一般ユーザー（member）が自分自身の投稿を匿名で行った場合、
- * サーバーは`author: null`を返すため、この画面からは「自分の投稿」として認識できない**
- * （非adminには匿名投稿者の`author`情報自体が返らない仕様のため）。
- * この場合、本人が再度このページを開くと「新規投稿」フォームが表示されてしまい、送信すると
- * サーバー側の一意制約により`409`になる。将来的にはサーバー側に`isMine`相当のフラグを
- * 追加してもらうのが正攻法の解決策であり、現時点では既知の制約として残す。
+ * 「投稿済みかどうか」はサーバーが返す`isMine`フラグで判定する（`author`は匿名投稿時`null`になり
+ * 本人判定に使えないため、判定専用のフラグとして別途用意されている。以前は`author?.id === me.id`で
+ * 判定しており、member自身の匿名投稿を検出できない不具合があったが解消済み）。
  */
 export function FeedbackPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const { data: me } = useMe();
   const [ineligibleMessage, setIneligibleMessage] = useState<string | null>(null);
 
   const eventHeaderQuery = useFeedbackEventHeader(eventId ?? "");
   const feedbacksQuery = useEventFeedbacks(eventId ?? "");
 
-  const myFeedback = feedbacksQuery.data?.feedbacks.find((feedback) => feedback.author?.id === me?.id);
+  const myFeedback = feedbacksQuery.data?.feedbacks.find((feedback) => feedback.isMine);
 
   const submitFeedback = useSubmitFeedback(eventId ?? "");
   const updateFeedback = useUpdateFeedback(eventId ?? "", myFeedback?.id ?? "");

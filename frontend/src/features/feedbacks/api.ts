@@ -21,6 +21,11 @@ export interface FeedbackItem {
   comment: string;
   isAnonymous: boolean;
   author: FeedbackAuthor | null;
+  /**
+   * ログイン中の本人が投稿したフィードバックかどうか（`author`の匿名/非公開による出し分けとは独立）。
+   * 匿名投稿時は`author`が`null`になり本人判定に使えないため、判定専用にサーバーが返す。
+   */
+  isMine: boolean;
   /** adminがこのエンドポイントを叩いた場合のみ含まれる。 */
   isHidden?: boolean;
 }

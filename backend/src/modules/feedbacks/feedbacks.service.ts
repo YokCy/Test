@@ -50,6 +50,11 @@ export class FeedbacksService {
           rating: feedback.rating,
           comment: feedback.comment,
           isAnonymous: feedback.isAnonymous,
+          // WHY: 匿名投稿の場合、一般ユーザー向けレスポンスは`author`をnullにするため、
+          // フロント側は「自分の投稿か」を`author.id`だけでは判定できない
+          // （member自身の匿名投稿を編集モードとして検出できない既知の不具合）。
+          // 投稿者本人かどうかは匿名/非公開の可視性とは独立した情報のため、常に含める。
+          isMine: feedback.userId === currentUser.id,
         };
 
         if (isAdmin) {

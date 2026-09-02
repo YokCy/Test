@@ -8,10 +8,7 @@ type OrganizingEventRowProps = {
 };
 
 /**
- * 「主催イベント」タブの1行。
- * WHY(capacityが無い件): `OrganizingItem`には`capacity`が含まれず「参加者{confirmedCount}/{capacity}」
- * という画面設計仕様.md 3.1.5の表示例通りには描画できないため、代わりに確定・キャンセル待ちの
- * 人数をそのまま表示する（バックエンドのレスポンス設計の見直しが必要であれば別途検討する）。
+ * 「主催イベント」タブの1行（画面設計仕様.md 3.1.5「参加者{confirmedCount}/{capacity}」表示）。
  */
 export function OrganizingEventRow({ event }: OrganizingEventRowProps) {
   return (
@@ -23,7 +20,8 @@ export function OrganizingEventRow({ event }: OrganizingEventRowProps) {
           {"　"}
           {formatEventDateTime(event.startAt)}
           {"　"}
-          確定 {event.confirmedCount}名・キャンセル待ち {event.waitlistedCount}名
+          参加者{event.confirmedCount}/{event.capacity}
+          {event.waitlistedCount > 0 && `（キャンセル待ち ${event.waitlistedCount}名）`}
         </p>
       </div>
       <Link

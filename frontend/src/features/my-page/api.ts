@@ -18,6 +18,7 @@ export interface OrganizingItem {
   title: string;
   startAt: string;
   category: MyPageCategorySummary;
+  capacity: number;
   confirmedCount: number;
   waitlistedCount: number;
 }

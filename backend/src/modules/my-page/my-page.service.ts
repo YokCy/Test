@@ -9,6 +9,7 @@ export interface OrganizingEventItem {
   title: string;
   startAt: Date;
   category: { id: string; name: string };
+  capacity: number;
   confirmedCount: number;
   waitlistedCount: number;
 }
@@ -136,6 +137,7 @@ export class MyPageService {
         title: event.title,
         startAt: event.startAt,
         category: event.category,
+        capacity: event.capacity,
         confirmedCount: count.confirmed,
         waitlistedCount: count.waitlisted,
       };

@@ -769,7 +769,7 @@ model Feedback {
 
 * 概要: レビュー一覧・平均評価を取得する。非公開化（`isHidden`）されたレビューは一般ユーザーには含めず、平均評価の算出からも除外する。adminには非公開分も含め投稿者情報とあわせて返す。
 * 認可: 要認証（全ロール）
-* Success `200`: `data`は`{ averageRating, feedbacks: [{ id, rating, comment, isAnonymous, author(匿名時はnull、admin閲覧時のみ常に含む), isHidden(adminのみ) }] }`
+* Success `200`: `data`は`{ averageRating, feedbacks: [{ id, rating, comment, isAnonymous, author(匿名時はnull、admin閲覧時のみ常に含む), isMine(本人の投稿かどうか。匿名投稿時も`author`とは独立に判定できるようサーバーが計算して返す), isHidden(adminのみ) }] }`
 * Errors: `401` / `404`
 
 #### 24. POST /events/:id/feedbacks
@@ -799,7 +799,9 @@ model Feedback {
 
 * 概要: マイページ用に、自身が主催するイベント・参加予定イベント・参加履歴を取得する。
 * 認可: 要認証（本人分のみ）
-* Success `200`: `data`は`{ organizing: [...], upcoming: [...], history: [...] }`
+* Success `200`: `data`は`{ organizing: [...], upcoming: [...], history: [...] }`。`organizing`の各要素は
+  `{ id, title, startAt, category, capacity, confirmedCount, waitlistedCount }`（画面設計仕様.md 3.1.5節
+  「参加者{confirmedCount}/{capacity}」表示のため`capacity`を含む）
 * Errors: `401`
 
 #### 28. GET /users/me/stats
