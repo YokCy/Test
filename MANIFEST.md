@@ -714,7 +714,7 @@ model Feedback {
 
 * 概要: イベントを新規作成する（作成者が自動的に主催者になる）。
 * 認可: 要認証（全ロール）
-* Body: `title`(必須), `description`(任意), `categoryId`(必須), `tags`(String配列, 任意), `startAt`(必須), `endAt`(任意), `capacity`(Int, 必須, `>=1`), `registrationDeadline`(任意), `cancellationDeadline`(任意)
+* Body: `title`(必須), `description`(任意), `categoryId`(必須), `tags`(String配列, 任意), `startAt`(必須), `endAt`(任意), `capacity`(Int, 必須, `>=1`かつ`<=10000`), `registrationDeadline`(任意), `cancellationDeadline`(任意)
 * Success `201`: `data`は作成後のイベント詳細
 * Errors: `400`(バリデーションエラー。`startAt`が過去日時の場合を含む) / `401` / `404`(`categoryId`が存在しない)
 

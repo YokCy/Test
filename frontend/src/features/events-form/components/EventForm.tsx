@@ -210,6 +210,7 @@ export function EventForm({ defaultValues, onSubmit, onCancel, submitLabel }: Ev
           id="event-capacity"
           type="number"
           min={1}
+          max={10000}
           className="w-32 rounded-md border border-slate-300 px-3 py-2 text-sm"
           {...register("capacity", { valueAsNumber: true })}
         />
