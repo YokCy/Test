@@ -145,3 +145,5 @@ Phase 10でルーティング・ナビゲーションを一括統合し、Phase 
 - [x] 11.3 満席イベント（定員1）でのキャンセル待ち登録の表示反映をブラウザで確認する（1人目CONFIRMED・2人目WAITLISTED、カード/詳細双方の`registrationState`表示を確認。自動繰り上げのトランザクション自体はbackend-tasks.md Phase 12.3でAPI直接呼び出しにより確認済み）
 - [ ] 11.4 出席マーク→フィードバック投稿（匿名投稿含む）→admin非公開化の一連の流れを手動確認する（開催日時が未来のテストイベントでは出席マークがdisabledのため未実施。過去日時のイベントでの確認が必要）
 - [x] 11.5 admin以外のユーザーで`/admin/categories`にアクセスし、404画面（P-10）が表示されることを確認する
+- [x] 11.6 `pnpm --filter frontend test`でVitestユニットテストを一括実行する
+  > `frontend-unit-test-perspectives.md`（画面設計仕様.md 3章基準の観点整理）を基に、`test-agent`サブエージェント4並列（共通UI/router/layout、events/events-form、my-page/attendance、feedbacks/admin-categories）でユニットテストを新規作成。全29ファイル・160件（`npx vitest run`一括実行）が全て成功、`tsc --noEmit`・ESLintともにクリーン（既存の軽微な警告4件のみ残存、エラーなし）。既存の`LoginPage.test.tsx`に実装（`ROUTES.home`遷移）とテストの前提が食い違うバグを発見し修正済み。`EventForm`の定員入力に`min={1}`のネイティブHTML制約があり、`0`入力時にZodのカスタムエラーメッセージへ到達しない設計上の細かな不整合を発見したが、送信自体は安全側にブロックされるため未修正のまま報告のみとした。`EventsListPage`のカテゴリ絞り込みUI・「＋新規作成」導線は本リスト作成時点で未実装（11.4と同じ既知の残タスク領域）であることを確認した。

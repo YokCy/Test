@@ -28,7 +28,7 @@ function renderLoginPage() {
       <MemoryRouter initialEntries={["/login"]}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/settings/profile" element={<p>プロフィール画面</p>} />
+          <Route path="/events" element={<p>イベント一覧画面</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -46,7 +46,7 @@ describe("LoginPage", () => {
     expect(apiClient.post).not.toHaveBeenCalled();
   });
 
-  it("ログインに成功すると、プロフィール画面へ遷移する", async () => {
+  it("ログインに成功すると、イベント一覧画面（ROUTES.home）へ遷移する", async () => {
     const user = userEvent.setup();
     vi.mocked(apiClient.post).mockResolvedValueOnce({
       id: "user_1",
@@ -61,7 +61,7 @@ describe("LoginPage", () => {
     await user.type(screen.getByLabelText("パスワード"), "password123");
     await user.click(screen.getByRole("button", { name: "ログイン" }));
 
-    expect(await screen.findByText("プロフィール画面")).toBeInTheDocument();
+    expect(await screen.findByText("イベント一覧画面")).toBeInTheDocument();
     expect(apiClient.post).toHaveBeenCalledWith("/auth/login", {
       email: "yamada@example.com",
       password: "password123",

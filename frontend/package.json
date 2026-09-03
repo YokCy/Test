@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
+    "test:report": "vitest run --reporter=verbose > test-results/frontend-test-result.txt 2>&1",
     "test:e2e": "playwright test",
     "preview": "vite preview"
   },

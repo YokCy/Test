@@ -17,3 +17,6 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/tests/.auth/
 frontend/blob-report/
+
+# Jest（backend）
+backend/test-results/
