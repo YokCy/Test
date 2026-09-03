@@ -30,7 +30,12 @@ export function AttendanceRow({
   const buttonsDisabled = isMarkingDisabled || isMarkPending;
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-slate-200 py-3">
+    // WHY(data-testid): 出席/欠席ボタンの文言は全行で共通（「出席」「欠席」）のため、Playwright等が
+    // 特定の参加者の行だけにスコープして操作できるよう、行単位で識別子を付与する。
+    <div
+      data-testid={`attendance-row-${userId}`}
+      className="flex items-center justify-between gap-4 border-b border-slate-200 py-3"
+    >
       <span className="text-sm font-medium text-slate-900">{name}</span>
       <div className="flex items-center gap-2">
         <Button

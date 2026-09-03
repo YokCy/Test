@@ -147,3 +147,9 @@ Phase 10でルーティング・ナビゲーションを一括統合し、Phase 
 - [x] 11.5 admin以外のユーザーで`/admin/categories`にアクセスし、404画面（P-10）が表示されることを確認する
 - [x] 11.6 `pnpm --filter frontend test`でVitestユニットテストを一括実行する
   > `frontend-unit-test-perspectives.md`（画面設計仕様.md 3章基準の観点整理）を基に、`test-agent`サブエージェント4並列（共通UI/router/layout、events/events-form、my-page/attendance、feedbacks/admin-categories）でユニットテストを新規作成。全29ファイル・160件（`npx vitest run`一括実行）が全て成功、`tsc --noEmit`・ESLintともにクリーン（既存の軽微な警告4件のみ残存、エラーなし）。既存の`LoginPage.test.tsx`に実装（`ROUTES.home`遷移）とテストの前提が食い違うバグを発見し修正済み。`EventForm`の定員入力に`min={1}`のネイティブHTML制約があり、`0`入力時にZodのカスタムエラーメッセージへ到達しない設計上の細かな不整合を発見したが、送信自体は安全側にブロックされるため未修正のまま報告のみとした。`EventsListPage`のカテゴリ絞り込みUI・「＋新規作成」導線は本リスト作成時点で未実装（11.4と同じ既知の残タスク領域）であることを確認した。
+- [ ] 11.7 `pnpm --filter frontend test:e2e`でPlaywright E2Eテストを一括実行する（**テストコード生成済み、実行はユーザーの許可待ちのため未実施**）
+  > `e2e-test-perspectives.md`（画面設計仕様.md 3章のゴールデンパス・意地悪テスト・セキュリティテスト観点の整理）を基に、`test-agent`サブエージェント4並列（認証/編集削除、ゴールデンパス/キャンセル待ち、カテゴリ/admin操作/マイページ、エッジケース/セキュリティ）でテストコードを新規作成。全10スペックファイル・40ケース、`tsc --noEmit`・ESLintともにクリーン。基盤として`Modal.tsx`に`role="dialog"`、`AttendanceRow.tsx`に行識別用`data-testid`を追加、`tests/auth.setup.ts`・`tests/helpers/{credentials,auth,events,api}.ts`・`playwright.config.ts`（member用storageStateを既定化、dotenvでルート`.env`読み込み）を整備した。
+  > 実装コードとの突き合わせで以下3件の実装ギャップを発見（プロダクションコードは未修正、テストは実際の挙動に忠実に記述）。
+  > 1. P-03（イベント詳細画面）は`registrationState`のみを`RegistrationActionButton`に渡し`position`（キャンセル待ち順位）を渡していない。`GET /events/:id`のレスポンスにも`position`が含まれないため、画面設計仕様.md 3.1.3が明記する「キャンセル待ち中(3番目)」表示がP-03では出せない（マイページ側のみ実装済み）。
+  > 2. 他人のイベント編集画面（`/events/:id/edit`）へ直接アクセスしてもページロード時点では弾かれず（`GET /events/:id`が主催者制限をしていない）、フォーム送信時の`PUT`が`403`を返しても`EventForm`は`400`/`404`しかハンドリングしておらず`403`が未処理のPromise rejectionになる（ユーザーには何のエラー表示もされず無言でURLに留まる）。
+  > 3. `packages/shared/src/schemas/events.ts`の`CreateEventSchema`は`capacity`に`min(1)`のみで上限（`max`）が無く、極端に大きい数値も許容されてしまう可能性がある。

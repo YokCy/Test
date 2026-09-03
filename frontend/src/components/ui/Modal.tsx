@@ -43,7 +43,14 @@ export function Modal({ isOpen, onClose, title, children, testId }: ModalProps) 
       onClick={onClose}
     >
       {/* 内容が画面高を超える場合はこの内側パネルのみをスクロールさせ、外枠は中央固定のままにする */}
+      {/* WHY(role="dialog"): モーダル外の背景ページは閉じずに残るため（Playwright等で背景側と
+          同じ文言のボタンが同時にDOM上へ存在しうる。例: M-04確定ボタンと呼び出し元トリガーボタンが
+          共に「キャンセルする」）、E2Eテストが`getByRole("dialog")`でモーダル内に安定してスコープ
+          できるよう付与する。副次的にスクリーンリーダーにもモーダルであることが伝わる。 */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-lg bg-white shadow-xl"
         onClick={stopPropagation}
       >

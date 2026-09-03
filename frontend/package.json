@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"tests/**/*.ts\" playwright.config.ts",
     "test": "vitest run",
     "test:report": "vitest run --reporter=verbose > test-results/frontend-test-result.txt 2>&1",
     "test:e2e": "playwright test",
@@ -36,6 +36,7 @@
     "@typescript-eslint/parser": "^8.8.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^4.4.5",
