@@ -182,6 +182,25 @@ describe("EventForm", () => {
     expect(screen.getByRole("button", { name: "保存する" })).toBeInTheDocument();
   });
 
+  it("サーバー側認可エラー（403）発生時も、無言で失敗させずフォーム全体のエラーとして表示する", async () => {
+    // WHY: 主催者本人でもadminでもないユーザーがURL直接アクセス等でこの画面にたどり着けてしまう経路が
+    // あり、以前は400/404のみをハンドリングしていたため403が未処理のPromise rejectionになっていた
+    // （E2Eテスト作成時に発見・修正した回帰防止テスト）。
+    const user = userEvent.setup();
+    const { ApiError } = await import("../../../lib/api-client");
+    const onSubmit = vi
+      .fn()
+      .mockRejectedValue(new ApiError(403, "ForbiddenException", "このイベントを編集できるのは主催者本人またはadminのみです"));
+    renderForm({ onSubmit });
+    await fillRequiredFields(user);
+
+    await user.click(screen.getByRole("button", { name: "保存する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "このイベントを編集できるのは主催者本人またはadminのみです",
+    );
+  });
+
   it("編集時（defaultValues指定あり）は初期値がフォームに反映され、日時未設定項目は空欄になる", async () => {
     const defaultValues: CreateEventInput = {
       title: "既存の勉強会",

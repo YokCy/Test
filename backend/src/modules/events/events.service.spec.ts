@@ -107,6 +107,7 @@ function buildAuthUser(overrides: Partial<AuthUser> = {}): AuthUser {
 interface RegistrationFixture {
   userId: string;
   status: "CONFIRMED" | "WAITLISTED";
+  position?: number | null;
 }
 
 /** `findAll`用の最小限のイベント行フィクスチャ（`registrations`はincludeしなくなったため含まない）。 */
@@ -468,6 +469,35 @@ describe("EventsService", () => {
 
       expect(result.confirmedCount).toBe(2);
       expect(result.waitlistedCount).toBe(1);
+    });
+
+    it("実行者がWAITLISTEDで登録済みの場合、positionがそのまま返ること", async () => {
+      prisma.event.findFirst.mockResolvedValue(
+        buildEventDetailRow({
+          registrations: [{ userId: OTHER_MEMBER_ID, status: "WAITLISTED", position: 3 }],
+        }),
+      );
+      prisma.feedback.aggregate.mockResolvedValue(EMPTY_FEEDBACK_AGGREGATE);
+
+      const result = await service.findOne("event-1", buildAuthUser({ id: OTHER_MEMBER_ID }));
+
+      expect(result.position).toBe(3);
+    });
+
+    it("実行者がCONFIRMED、または未登録の場合、positionはnullになること", async () => {
+      prisma.event.findFirst.mockResolvedValue(
+        buildEventDetailRow({
+          registrations: [{ userId: OTHER_MEMBER_ID, status: "CONFIRMED", position: null }],
+        }),
+      );
+      prisma.feedback.aggregate.mockResolvedValue(EMPTY_FEEDBACK_AGGREGATE);
+
+      const confirmedResult = await service.findOne("event-1", buildAuthUser({ id: OTHER_MEMBER_ID }));
+      expect(confirmedResult.position).toBeNull();
+
+      prisma.event.findFirst.mockResolvedValue(buildEventDetailRow({ registrations: [] }));
+      const notRegisteredResult = await service.findOne("event-1", buildAuthUser({ id: OTHER_MEMBER_ID }));
+      expect(notRegisteredResult.position).toBeNull();
     });
 
     it("averageRatingは非公開分を除外した平均値を小数第1位に丸めて返すこと", async () => {

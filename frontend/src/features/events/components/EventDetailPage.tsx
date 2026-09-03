@@ -102,7 +102,11 @@ export function EventDetailPage() {
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <RegistrationActionButton eventId={event.id} registrationState={event.registrationState} />
+        <RegistrationActionButton
+          eventId={event.id}
+          registrationState={event.registrationState}
+          position={event.position}
+        />
       </div>
 
       <div className="flex flex-col gap-2">

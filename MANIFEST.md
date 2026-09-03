@@ -722,7 +722,7 @@ model Feedback {
 
 * 概要: イベント詳細を取得する。基本情報・参加者リスト・空き状況・`registrationState`・レビュー一覧（平均評価含む）を返す。
 * 認可: 要認証（全ロール）
-* Success `200`: `data`は`title`, `description`, `category`, `tags`, `organizer`, `startAt`, `endAt`, `capacity`, `confirmedCount`, `waitlistedCount`, `registrationDeadline`, `cancellationDeadline`, `registrationState`(`NOT_REGISTERED`|`CONFIRMED`|`WAITLISTED`|`ORGANIZER`|`CLOSED`), `averageRating`, `feedbackCount`
+* Success `200`: `data`は`title`, `description`, `category`, `tags`, `organizer`, `startAt`, `endAt`, `capacity`, `confirmedCount`, `waitlistedCount`, `registrationDeadline`, `cancellationDeadline`, `registrationState`(`NOT_REGISTERED`|`CONFIRMED`|`WAITLISTED`|`ORGANIZER`|`CLOSED`), `position`(`WAITLISTED`の場合のみ意味を持つ待機順。それ以外は`null`。画面設計仕様.md 3.1.3「キャンセル待ち中(n番目)」表示用), `averageRating`, `feedbackCount`
 * Errors: `401` / `404`(存在しない、または論理削除済み)
 
 #### 17. PUT /events/:id

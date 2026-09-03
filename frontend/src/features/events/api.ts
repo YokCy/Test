@@ -50,6 +50,8 @@ export interface EventDetail {
   registrationDeadline: string | null;
   cancellationDeadline: string | null;
   registrationState: RegistrationState;
+  /** WAITLISTEDの場合のみ意味を持つ、キャンセル待ちの順番（1始まり）。 */
+  position: number | null;
   averageRating: number | null;
   feedbackCount: number;
 }

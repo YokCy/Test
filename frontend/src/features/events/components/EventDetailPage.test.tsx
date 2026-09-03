@@ -69,6 +69,7 @@ const baseEvent: EventDetail = {
   registrationDeadline: null,
   cancellationDeadline: null,
   registrationState: "NOT_REGISTERED",
+  position: null,
   averageRating: null,
   feedbackCount: 0,
 };
@@ -131,6 +132,15 @@ describe("EventDetailPage", () => {
     renderDetailPage();
 
     expect(await screen.findByRole("button", { name: "キャンセル待ちをやめる" })).toBeInTheDocument();
+  });
+
+  it("WAITLISTEDかつpositionを含む場合、RegistrationActionButtonにキャンセル待ち順位が反映される", async () => {
+    // WHY: GET /events/:idのレスポンスにpositionが追加される前は、P-03（詳細画面）に
+    // 「キャンセル待ち中(n番目)」の順位が反映できていなかった（画面設計仕様.md 3.1.3の回帰防止）。
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ ...baseEvent, registrationState: "WAITLISTED", position: 3 });
+    renderDetailPage();
+
+    expect(await screen.findByText("キャンセル待ち中（3番目）")).toBeInTheDocument();
   });
 
   it("主催者本人の場合、編集・削除ボタンと出席管理へのリンクが表示される", async () => {

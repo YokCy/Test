@@ -70,7 +70,10 @@ export function EventForm({ defaultValues, onSubmit, onCancel, submitLabel }: Ev
       // WHY: バリデーション自体はクライアント側（zodResolver）で完結する想定だが、カテゴリが
       // 直前に削除された等の競合（404）・サーバー固有のルール（過去日時の開催不可等、400）は
       // クライアント側スキーマに存在しないためサーバー側の判定に委ねる（LoginPage.tsxと同じ方針）。
-      if (error instanceof ApiError && (error.status === 400 || error.status === 404)) {
+      // 403（主催者本人でもadminでもない）も、URL直接アクセス等でこの画面にたどり着けてしまう経路が
+      // ある以上ここで拾わないと無言のPromise rejectionになってしまうため、同様にフォーム全体の
+      // エラーとして表示する（過去にE2Eテスト作成時のコードレビューで発見・修正）。
+      if (error instanceof ApiError) {
         setError("root", { message: error.message });
         return;
       }

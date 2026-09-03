@@ -185,6 +185,10 @@ export class EventsService {
       registrationDeadline: event.registrationDeadline,
       cancellationDeadline: event.cancellationDeadline,
       registrationState: this.computeRegistrationState(event, user.id, myRegistration),
+      // WHY: WAITLISTEDの順位表示（画面設計仕様.md 3.1.3「キャンセル待ち中(3番目)」）はP-03（詳細画面）でも
+      // 必要だが、これまでレスポンスに含まれておらずマイページ側でしか表示できていなかった。
+      // CONFIRMED/未登録では意味を持たないためnullになる（MANIFEST.md 5章の`position`の定義と同じ）。
+      position: myRegistration?.position ?? null,
       averageRating,
       feedbackCount,
     };
