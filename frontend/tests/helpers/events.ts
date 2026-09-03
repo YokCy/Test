@@ -2,9 +2,15 @@ import type { Page } from "@playwright/test";
 
 /**
  * `Date`を`<input type="datetime-local">`（`EventForm.tsx`）が期待する`YYYY-MM-DDTHH:mm`形式へ、
- * 実行環境のタイムゾーンに関係なくJST（Asia/Tokyo）で変換する。
+ * 実行環境のタイムゾーンに関係なくJST（Asia/Tokyo）で変換する。分未満は素直に切り捨てる
+ * （`datetime-local`が分単位までしか表現できないため）。
  * WHY: CI等、実行環境のタイムゾーンがJSTでない場合でも常に同じ入力値になるようにするため、
  * `Date`のロケール依存メソッドではなく`Intl.DateTimeFormat`でタイムゾーンを明示指定する。
+ * WHY(ここでは丸めない): 以前はこの関数内で分単位に切り上げていたが、そうすると「送信される
+ * 実際のstartAt」と「呼び出し元がwaitMs計算に使うDateオブジェクト」がズレてしまい
+ * （切り上げ分だけ実際のstartAtが遅くなるのに、待機時間の計算は元のDateを使うため待ちが不足する）、
+ * 別の回帰を生んだ。`startAt`の待機時間計算が絡む呼び出し元は、この関数ではなく
+ * `futureMinuteAligned`で最初から分境界に揃った`Date`を作ることで、丸め自体を発生させない。
  */
 export function toJstDatetimeLocal(date: Date): string {
   const parts = new Intl.DateTimeFormat("sv-SE", {
@@ -23,6 +29,19 @@ export function toJstDatetimeLocal(date: Date): string {
 /** 現在時刻から指定ミリ秒後の`Date`を返す。テストの日時条件を常に実行時刻からの相対値にするため。 */
 export function futureDate(msFromNow: number): Date {
   return new Date(Date.now() + msFromNow);
+}
+
+/**
+ * 現在時刻から指定ミリ秒後を、分境界に切り上げた`Date`として返す。
+ * WHY: `startAt`のように「実際に時間が経過するのを待ってから操作する」シナリオ（0.3節）で、
+ * 待機時間をこの関数の返り値から計算すれば、`toJstDatetimeLocal`（分単位切り捨て）を経由しても
+ * 情報が失われない（既に分境界なので丸めが発生しない）。`futureDate`をそのまま使うと、
+ * `datetime-local`送信時に最大59秒切り捨てられ、待機時間の計算とズレて開催前判定のままになる
+ * （実際に発生した回帰）。
+ */
+export function futureMinuteAligned(msFromNow: number): Date {
+  const target = Date.now() + msFromNow;
+  return new Date(Math.ceil(target / 60_000) * 60_000);
 }
 
 export interface CreateEventOptions {
@@ -78,11 +97,16 @@ export async function createEventViaUi(page: Page, options: CreateEventOptions):
   }
 
   await page.getByRole("button", { name: "保存する" }).click();
-  await page.waitForURL(/\/events\/[^/]+$/);
+  // WHY: `page.goto("/events/new")`した時点で既に`/events/new`自体が`/\/events\/[^/]+$/`という
+  // 単純な正規表現にマッチしてしまうため、送信後の遷移を待たずに`waitForURL`が即座に解決してしまい、
+  // eventIdとして文字列"new"を誤って掴んでしまう不具合があった（複数E2Eテストが原因不明のまま
+  // "イベントを作成"画面に迷い込む形で失敗する、という形で顕在化した）。`/events/new`自体を
+  // 明示的に除外する条件にする。
+  await page.waitForURL((url) => /^\/events\/[^/]+$/.test(url.pathname) && url.pathname !== "/events/new");
 
   const match = /\/events\/([^/]+)$/.exec(page.url());
   const eventId = match?.[1];
-  if (!eventId) {
+  if (!eventId || eventId === "new") {
     throw new Error(`イベント作成後の遷移先URLからeventIdを取得できませんでした: ${page.url()}`);
   }
   return eventId;

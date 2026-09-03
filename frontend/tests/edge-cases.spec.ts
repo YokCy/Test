@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { expectSuccessData, loginBackendContext } from "./helpers/api";
 import { loginAsNewContext } from "./helpers/auth";
 import { MEMBER_CREDENTIALS } from "./helpers/credentials";
-import { createEventViaUi, futureDate } from "./helpers/events";
+import { createEventViaUi, futureDate, futureMinuteAligned } from "./helpers/events";
 
 /**
  * e2e-test-perspectives.md「8. エッジケース・意地悪テスト」に対応するE2E。
@@ -124,7 +124,7 @@ test.describe("8. エッジケース・意地悪テスト", () => {
   }) => {
     test.setTimeout(90_000);
 
-    const startAt = futureDate(15_000);
+    const startAt = futureMinuteAligned(15_000);
     const eventId = await createEventViaUi(page, {
       title: `二重投稿防止テスト ${Date.now()}`,
       startAt,
@@ -196,6 +196,14 @@ test.describe("8. エッジケース・意地悪テスト", () => {
       // WHY: 他画面のリンクを経由せず、フィードバック投稿URLへ直接アクセスする（他画面経由だと
       // 実際にはリンク自体が出ていても踏めてしまう場合との区別が付かないため）。
       await participantPage.goto(`/events/${eventId}/feedback`);
+
+      // WHY: FeedbackPage自体はページ表示時点では投稿条件を検証しない（フォームは常に表示される）。
+      // 403での理由表示は、実際に`onSubmit`でPOST /feedbacksを呼んで初めてサーバー側の判定結果として
+      // 表示される（`FeedbackForm`の`onIneligible`コールバック経由）。星評価未選択のままだと
+      // クライアント側バリデーションで止まってしまうため、評価を選択してから送信する。
+      await participantPage.getByRole("radiogroup", { name: "評価" }).getByRole("radio", { name: "5" }).click();
+      await participantPage.getByLabel("コメント").fill("テストコメント");
+      await participantPage.getByRole("button", { name: "投稿する" }).click();
 
       await expect(
         participantPage.getByText("開催終了かつ出席済みのイベントのみフィードバックを投稿できます"),

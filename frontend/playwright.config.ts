@@ -1,12 +1,17 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 
+// WHY(import.meta.url): frontendは"type": "module"のためこのファイルはESMとして読み込まれ、
+// CommonJS専用の__dirnameは使えない。import.meta.urlから同等のディレクトリパスを導出する。
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+
 // WHY: adminのログイン情報（SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD）はリポジトリルートの.envで
 // 管理している（backend/prisma/seed.tsが読む環境変数と同一）。Playwright単体で実行してもdocker-compose
 // 経由の環境変数注入は効かないため、ここでルートの.envを明示的に読み込む。
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(dirname, "../.env") });
 
 /**
  * E2Eテストの設定。

@@ -9,7 +9,7 @@ import {
 } from "./helpers/api";
 import { loginAsNewContext } from "./helpers/auth";
 import { ADMIN_CREDENTIALS, MEMBER_CREDENTIALS } from "./helpers/credentials";
-import { createEventViaUi, futureDate } from "./helpers/events";
+import { createEventViaUi, futureDate, futureMinuteAligned } from "./helpers/events";
 
 /**
  * e2e-test-perspectives.md「9. セキュリティテスト（認可バイパス・情報漏えい）」に対応するE2E。
@@ -179,7 +179,7 @@ test.describe("9.1 未認証・認可バイパス（読み取り系IDOR・情報
   });
 
   test("非公開化されたフィードバックは、一般ユーザー視点のGETレスポンスに一切含まれないこと", async () => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
 
     const secretMarker = `非公開マーカーコメント${Date.now()}`;
     const { organizer, participant, eventId, feedbackId } = await createAttendedFeedback({
@@ -199,8 +199,10 @@ test.describe("9.1 未認証・認可バイパス（読み取り系IDOR・情報
       expect(bodyText).not.toContain(feedbackId);
       expect(bodyText).not.toContain(secretMarker);
 
-      const body = JSON.parse(bodyText) as { feedbacks: { id: string }[] };
-      expect(body.feedbacks.some((feedback) => feedback.id === feedbackId)).toBe(false);
+      // WHY: レスポンスは`{ success, data: { feedbacks: [...] } }`の形（MANIFEST.md 6章の
+      // レスポンス形式規約）であり、`feedbacks`はトップレベルではなく`data`の下にある。
+      const body = JSON.parse(bodyText) as { success: boolean; data: { feedbacks: { id: string }[] } };
+      expect(body.data.feedbacks.some((feedback) => feedback.id === feedbackId)).toBe(false);
     } finally {
       await organizer.dispose();
       await participant.dispose();
@@ -210,7 +212,7 @@ test.describe("9.1 未認証・認可バイパス（読み取り系IDOR・情報
   });
 
   test("匿名投稿されたフィードバックは、一般ユーザー視点のGETレスポンスでauthorがnullになり、投稿者を特定できる情報が含まれないこと", async () => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
 
     const { organizer, participant, eventId, feedbackId, participantUserId } = await createAttendedFeedback({
       isAnonymous: true,
@@ -267,7 +269,7 @@ test.describe("9.2 入力値攻撃（自分が作成したテストデータの�
   test("自分が作成したイベントのタイトル・説明文、フィードバックコメントにHTML/JSを含む文字列を投稿しても、エスケープされ実行されないこと", async ({
     page,
   }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(90_000);
 
     let dialogFired = false;
     // WHY: `alert()`等が実行されてしまった場合、ハンドラを登録しないとPlaywrightがダイアログの
@@ -279,7 +281,7 @@ test.describe("9.2 入力値攻撃（自分が作成したテストデータの�
 
     const maliciousTitle = `<script>window.__xssTitle=true</script>タイトル ${Date.now()}`;
     const maliciousDescription = '<img src="x" onerror="window.__xssDescription=true" />説明文';
-    const startAt = futureDate(15_000);
+    const startAt = futureMinuteAligned(15_000);
 
     const eventId = await createEventViaUi(page, {
       title: maliciousTitle,

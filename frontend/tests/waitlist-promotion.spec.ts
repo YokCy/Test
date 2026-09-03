@@ -75,6 +75,9 @@ test.describe("満席時のキャンセル待ち登録→キャンセル→自�
     await tanakaPage.reload();
     await expect(tanakaPage.getByText("定員: 1名(残り 0名)")).toBeVisible();
     await expect(tanakaPage.getByText("参加者一覧（1/1）")).toBeVisible();
-    await expect(tanakaPage.getByText("キャンセル待ち", { exact: false })).not.toBeVisible();
+    // WHY: 単純に「キャンセル待ち」を含むテキストで検索すると、イベントタイトル自体
+    // （`満席キャンセル待ちテスト_...`）に一致してしまう。キャンセル待ち件数バッジの実際の文言
+    // （EventDetailPage.tsx「キャンセル待ち {n}名」）に絞って不在を確認する。
+    await expect(tanakaPage.getByText(/キャンセル待ち \d+名/)).not.toBeVisible();
   });
 });

@@ -3,7 +3,7 @@ import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 import { loginAsNewContext } from "./helpers/auth";
 import { MEMBER_CREDENTIALS } from "./helpers/credentials";
-import { createEventViaUi, futureDate } from "./helpers/events";
+import { createEventViaUi, futureDate, futureMinuteAligned } from "./helpers/events";
 
 // WHY: 6章「権限に応じた操作」はadmin視点の確認が中心のため、既定のmember storageStateではなく
 // adminのstorageStateに差し替える（e2e-test-perspectives.md 0.2節）。organizer役・参加者役は
@@ -111,7 +111,7 @@ test.describe("フィードバックの非公開化（M-06）・匿名表示（a
     try {
       // Arrange: 開催日時を数十秒後に設定し、実際に時間経過を待ってから出席マーク・フィードバック投稿へ
       // 進む（e2e-test-perspectives.md 0.3節の方式）。
-      const startAt = futureDate(20_000);
+      const startAt = futureMinuteAligned(20_000);
       const eventId = await createEventViaUi(organizer.page, {
         title: `E2E非公開化確認-${Date.now()}`,
         startAt,

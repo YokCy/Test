@@ -15,7 +15,17 @@ export const BACKEND_BASE_URL = "http://localhost:3000";
  * `context.dispose()`で必ず後片付けすること。
  */
 export function createBackendContext(): Promise<APIRequestContext> {
-  return playwrightRequest.newContext({ baseURL: BACKEND_BASE_URL });
+  // WHY(storageState明示): テスト実行中に`request.newContext()`を呼ぶと、`baseURL`等
+  // 明示しなかったオプションは実行中プロジェクトの`use`設定（`playwright.config.ts`のchromium
+  // プロジェクトが指定する`storageState: "tests/.auth/member.json"`）を暗黙に継承してしまう。
+  // 「未認証」を検証するテストがこれを見落とすと、実際にはmember（tanaka）としてログイン済みの
+  // 状態でリクエストしてしまい、401を期待する検証が意図せず200で通ってしまう
+  // （実際にこの見落としで発生した回帰を修正した箇所）。空のCookie/originsを明示して確実に
+  // 未認証状態にする。
+  return playwrightRequest.newContext({
+    baseURL: BACKEND_BASE_URL,
+    storageState: { cookies: [], origins: [] },
+  });
 }
 
 /**

@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 
 import { loginAsNewContext } from "./helpers/auth";
 import { MEMBER_CREDENTIALS } from "./helpers/credentials";
-import { createEventViaUi, futureDate } from "./helpers/events";
+import { createEventViaUi, futureDate, futureMinuteAligned } from "./helpers/events";
 
 // WHY: 既定のchromiumプロジェクトはmember(tanaka)のstorageStateを使う（playwright.config.ts）。
 // 本ファイルは「あるユーザー（tanaka）から見たマイページの反映」を確認するため、既定のまま利用する。
@@ -13,7 +13,7 @@ test.describe("マイページ（P-06）の3タブへの振り分け", () => {
     page,
     browser,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
 
     const organizer = await loginAsNewContext(browser, MEMBER_CREDENTIALS.sato);
 
@@ -41,7 +41,7 @@ test.describe("マイページ（P-06）の3タブへの振り分け", () => {
 
       // Arrange: 「参加履歴」タブ用に、開催日時を数十秒後に設定したイベントへtanakaが登録し、
       // 実際に時間経過を待つ（e2e-test-perspectives.md 0.3節）。
-      const historyStartAt = futureDate(20_000);
+      const historyStartAt = futureMinuteAligned(20_000);
       const historyEventId = await createEventViaUi(organizer.page, {
         title: historyTitle,
         startAt: historyStartAt,
@@ -108,7 +108,7 @@ test.describe("マイページの累計参加数・出席率・カテゴリ別�
     page,
     browser,
   }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
 
     const organizer = await loginAsNewContext(browser, MEMBER_CREDENTIALS.sato);
 
@@ -118,7 +118,7 @@ test.describe("マイページの累計参加数・出席率・カテゴリ別�
       const beforeTotal = parseTotalParticipations(beforeStats);
       const beforeCategoryCount = parseCategoryCount(beforeStats, "勉強会");
 
-      const startAt = futureDate(20_000);
+      const startAt = futureMinuteAligned(20_000);
       const eventId = await createEventViaUi(organizer.page, {
         title: `E2E統計反映確認-${Date.now()}`,
         startAt,

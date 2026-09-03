@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { AccessTokenPayload, RefreshTokenPayload } from "@eventboard/shared";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -27,11 +29,19 @@ export class TokenService {
     });
   }
 
-  /** Refresh Token（有効期限7日）を発行する */
+  /**
+   * Refresh Token（有効期限7日）を発行する。
+   * WHY(jwtid): ペイロードが`{ sub: userId }`のみだと、同一ユーザーが同じ秒内に複数回ログイン
+   * （二重クリック・複数タブでのほぼ同時ログイン等）した場合、`iat`（秒単位）まで含めて署名結果が
+   * 完全に一致してしまい、`RefreshTokenService.issue`が保存する`tokenHash`（トークンのSHA-256）が
+   * 衝突してDBのユニーク制約違反（500エラー）になる不具合があった。`jwtid`にランダム値を持たせることで、
+   * タイミングに関わらず毎回一意なトークンになるようにする。
+   */
   signRefreshToken(payload: RefreshTokenPayload): string {
     return this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>("JWT_REFRESH_SECRET"),
       expiresIn: REFRESH_TOKEN_TTL_SECONDS,
+      jwtid: randomUUID(),
     });
   }
 

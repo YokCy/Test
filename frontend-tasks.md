@@ -147,9 +147,12 @@ Phase 10でルーティング・ナビゲーションを一括統合し、Phase 
 - [x] 11.5 admin以外のユーザーで`/admin/categories`にアクセスし、404画面（P-10）が表示されることを確認する
 - [x] 11.6 `pnpm --filter frontend test`でVitestユニットテストを一括実行する
   > `frontend-unit-test-perspectives.md`（画面設計仕様.md 3章基準の観点整理）を基に、`test-agent`サブエージェント4並列（共通UI/router/layout、events/events-form、my-page/attendance、feedbacks/admin-categories）でユニットテストを新規作成。全29ファイル・160件（`npx vitest run`一括実行）が全て成功、`tsc --noEmit`・ESLintともにクリーン（既存の軽微な警告4件のみ残存、エラーなし）。既存の`LoginPage.test.tsx`に実装（`ROUTES.home`遷移）とテストの前提が食い違うバグを発見し修正済み。`EventForm`の定員入力に`min={1}`のネイティブHTML制約があり、`0`入力時にZodのカスタムエラーメッセージへ到達しない設計上の細かな不整合を発見したが、送信自体は安全側にブロックされるため未修正のまま報告のみとした。`EventsListPage`のカテゴリ絞り込みUI・「＋新規作成」導線は本リスト作成時点で未実装（11.4と同じ既知の残タスク領域）であることを確認した。
-- [ ] 11.7 `pnpm --filter frontend test:e2e`でPlaywright E2Eテストを一括実行する（**テストコード生成済み、実行はユーザーの許可待ちのため未実施**）
-  > `e2e-test-perspectives.md`（画面設計仕様.md 3章のゴールデンパス・意地悪テスト・セキュリティテスト観点の整理）を基に、`test-agent`サブエージェント4並列（認証/編集削除、ゴールデンパス/キャンセル待ち、カテゴリ/admin操作/マイページ、エッジケース/セキュリティ）でテストコードを新規作成。全10スペックファイル・40ケース、`tsc --noEmit`・ESLintともにクリーン。基盤として`Modal.tsx`に`role="dialog"`、`AttendanceRow.tsx`に行識別用`data-testid`を追加、`tests/auth.setup.ts`・`tests/helpers/{credentials,auth,events,api}.ts`・`playwright.config.ts`（member用storageStateを既定化、dotenvでルート`.env`読み込み）を整備した。
-  > 実装コードとの突き合わせで以下3件の実装ギャップを発見（プロダクションコードは未修正、テストは実際の挙動に忠実に記述）。
-  > 1. P-03（イベント詳細画面）は`registrationState`のみを`RegistrationActionButton`に渡し`position`（キャンセル待ち順位）を渡していない。`GET /events/:id`のレスポンスにも`position`が含まれないため、画面設計仕様.md 3.1.3が明記する「キャンセル待ち中(3番目)」表示がP-03では出せない（マイページ側のみ実装済み）。
-  > 2. 他人のイベント編集画面（`/events/:id/edit`）へ直接アクセスしてもページロード時点では弾かれず（`GET /events/:id`が主催者制限をしていない）、フォーム送信時の`PUT`が`403`を返しても`EventForm`は`400`/`404`しかハンドリングしておらず`403`が未処理のPromise rejectionになる（ユーザーには何のエラー表示もされず無言でURLに留まる）。
-  > 3. `packages/shared/src/schemas/events.ts`の`CreateEventSchema`は`capacity`に`min(1)`のみで上限（`max`）が無く、極端に大きい数値も許容されてしまう可能性がある。
+- [x] 11.7 `pnpm --filter frontend test:e2e`でPlaywright E2Eテストを一括実行する
+  > `e2e-test-perspectives.md`（画面設計仕様.md 3章のゴールデンパス・意地悪テスト・セキュリティテスト観点の整理）を基に、`test-agent`サブエージェント4並列（認証/編集削除、ゴールデンパス/キャンセル待ち、カテゴリ/admin操作/マイページ、エッジケース/セキュリティ）でテストコードを新規作成。全10スペックファイル・43ケース、`docker compose up`実環境（db/backend/frontend）に対して`npx playwright test`を実行し**全件成功**。`tsc --noEmit`・ESLintともにクリーン。基盤として`Modal.tsx`に`role="dialog"`、`AttendanceRow.tsx`に行識別用`data-testid`を追加、`tests/auth.setup.ts`・`tests/helpers/{credentials,auth,events,api}.ts`・`playwright.config.ts`（member用storageStateを既定化、dotenvでルート`.env`読み込み）を整備した。
+  > 実装コードとの突き合わせで見つかった3件の実装ギャップは、うち2件（P-03のposition表示欠落、EventFormの403無視）をユーザー承認の上で修正済み。3件目（capacity上限無し）もユーザーと相談の上`max(10000)`を追加済み（コミット履歴参照）。
+  > 実行段階でさらに2件の実装バグ・複数のテストコード不備を発見・修正した。
+  > 1. **【実装バグ】`RefreshTokenService.issue`のリフレッシュトークン衝突**: `TokenService.signRefreshToken`のペイロードが`{sub: userId}`のみで`jti`が無く、同一ユーザーが同じ秒内に複数回ログインする（二重クリック・複数タブでのほぼ同時ログイン等）とJWTが完全に一致し、`tokenHash`のユニーク制約違反で500エラーになっていた。`jwtid`にランダムUUIDを付与して修正（回帰防止テスト`token.service.spec.ts`を追加）。
+  > 2. **【テストヘルパーのバグ】`createEventViaUi`のeventId誤検出**: 遷移待ちの正規表現`/\/events\/[^/]+$/`が遷移前の`/events/new`自体にもマッチし、`waitForURL`が送信完了を待たずに解決、eventIdとして文字列`"new"`を誤って掴んでいた。多数のE2Eテストが原因不明のまま失敗する形で顕在化。`/events/new`を明示的に除外する条件に修正。
+  > 3. **【テストヘルパーの設計不備】`toJstDatetimeLocal`の分単位切り捨てによる意図しない過去日時化**: 短いバッファ（15〜40秒）で`startAt`を設定すると、`datetime-local`変換時の分未満切り捨てとフォーム入力の実時間が重なり、送信時点で過去日時になり400エラーになることがあった。切り上げ済みの`Date`を最初から作る`futureMinuteAligned`を新設し、時間経過待ちが絡む箇所をこちらに置き換えた。
+  > 4. **【テストヘルパーのバグ】`createBackendContext`の未認証コンテキストがmemberのstorageStateを暗黙継承**: `request.newContext()`は明示しなかったオプションを実行中プロジェクトの`use`設定（`storageState: member.json`）から継承してしまい、「未認証」を検証するテストが実際にはtanakaとしてログイン済みの状態でリクエストしていた（401を期待する検証が200で通ってしまっていた）。空の`storageState`を明示して修正。
+  > 5. その他、テストコード自体の誤り（レスポンス形状の思い込み違い、フォーム送信条件の考慮漏れ、イベントタイトル文字列とアサーション対象テキストの偶発的な一致等）を数件修正。

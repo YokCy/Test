@@ -2,7 +2,7 @@ import { expect, test, type Browser, type BrowserContext, type Page } from "@pla
 
 import { loginAsNewContext } from "./helpers/auth";
 import { MEMBER_CREDENTIALS } from "./helpers/credentials";
-import { createEventViaUi, futureDate } from "./helpers/events";
+import { createEventViaUi, futureMinuteAligned } from "./helpers/events";
 
 /**
  * e2e-test-perspectives.md「2. ゴールデンパス: イベント作成→参加登録→出席マーク→フィードバック投稿」。
@@ -37,7 +37,7 @@ test.describe("ゴールデンパス: イベント作成→参加登録→出席
     // ---- 1. tanaka(主催者、既定のstorageState)がイベントを作成する ----
     // WHY(40秒後): 出席マーク・フィードバック投稿の前提となる「開催日時経過」を実際に待つため、
     // 手順2〜4（参加登録・表示確認）にかかる時間を見込みつつ、待ち時間を現実的な範囲に収める。
-    const startAt = futureDate(40_000);
+    const startAt = futureMinuteAligned(40_000);
     const title = `ゴールデンパステスト_${Date.now()}`;
     const eventId = await createEventViaUi(tanakaPage, { title, startAt, capacity: 2 });
 
