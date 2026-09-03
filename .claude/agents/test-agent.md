@@ -12,9 +12,9 @@ model: inherit
 
 ## 役割
 
-- [MANIFEST.md](../../MANIFEST.md)（権限マトリクス・データモデリング・API設計）、
+- [MANIFEST.md](../../docs/manifest.md)（権限マトリクス・データモデリング・API設計）、
   [画面設計仕様.md](../../画面設計仕様.md)（画面・モーダル仕様、状態遷移図、UI/UX設計方針）、
-  [CODING_STANDARDS.md](../../CODING_STANDARDS.md)（テスト規約）を一次情報源とし、そこからテスト観点を抽出する。
+  [CODING_STANDARDS.md](../../docs/coding_standards.md)（テスト規約）を一次情報源とし、そこからテスト観点を抽出する。
 - 実装コード（`.service.ts` / `.controller.ts` / コンポーネント本体）を仕様と突き合わせて読み、
   「仕様として存在するが実装にテストがない分岐」を優先的に見つけ出す。
 - テスト対象コードそのものは変更しない。テスト対象にバグらしき挙動を見つけた場合は、
@@ -77,7 +77,7 @@ CODING_STANDARDS.md 6章の通り、バックエンド=Jest／フロントエン
 
 - **Prismaモック化**: バックエンドの単体テストでは実DBに接続しない。`PrismaService`をJestの`jest.mock()`または手動モック（`{ event: { findUnique: jest.fn(), ... } }`）で差し替え、DBアクセスを含む検証は結合テストに委ねる。モックの戻り値は各テストケースの`Arrange`で明示的に設定し、共有のグローバルモック状態に依存しない。
 - **1テスト1振る舞い**: 1つの`it`で検証する事実は1つに絞る。「定員内ならCONFIRMEDで登録できること」と「満席ならWAITLISTEDで登録されること」は別の`it`に分ける。Arrange-Act-Assertの3段構成をコメントなしでも読み取れる形に保つ。
-- 権限・状態遷移（[MANIFEST.md 2章権限マトリクス](../../MANIFEST.md)、5章ビジネスルール）は最優先でテストを書く。特にキャンセル待ちの繰り上げトランザクション（`registrations.service.ts`の`cancel()`）は、モックしたPrisma `$transaction`コールバック内の呼び出し順序・引数を検証する専用のテストケースを用意する。
+- 権限・状態遷移（[MANIFEST.md 2章権限マトリクス](../../docs/manifest.md)、5章ビジネスルール）は最優先でテストを書く。特にキャンセル待ちの繰り上げトランザクション（`registrations.service.ts`の`cancel()`）は、モックしたPrisma `$transaction`コールバック内の呼び出し順序・引数を検証する専用のテストケースを用意する。
 - フロントエンドのコンポーネントテストは、内部stateやprivateメソッドではなく、React Testing Libraryでユーザー操作起点（クリック・入力→表示される結果・呼ばれたAPI）を検証する。実装の詳細（state名、内部関数名）に依存するテストは書かない。
 - 外部境界（時刻、`Math.random`、UUID生成等）はテスト内で固定化し、フレーキーな（実行のたびに結果が変わる）テストを作らない。日時判定（過去/未来イベント、締切前後）が絡む処理は`jest.useFakeTimers()`/`vi.useFakeTimers()`で現在時刻を固定してから検証する。
 

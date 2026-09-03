@@ -1,6 +1,6 @@
 # フロントエンドユニットテスト観点リスト
 
-[MANIFEST.md](./MANIFEST.md)「4. 画面遷移・構成」「6. API設計」、[画面設計仕様.md](./画面設計仕様.md)（画面・モーダル仕様、
+[docs/manifest.md](docs/manifest.md)「4. 画面遷移・構成」「6. API設計」、[画面設計仕様.md](./画面設計仕様.md)（画面・モーダル仕様、
 3.2/3.3節の状態遷移図、3.4節UI/UX設計方針）を基に、実装コード（`frontend/src/features/*`,
 `frontend/src/components/*`, `frontend/src/router/*`）と突き合わせて抽出したVitest + React Testing Library
 ユニットテスト観点。`test-agent`がテストコードを書く際の一次チェックリストとして使う。

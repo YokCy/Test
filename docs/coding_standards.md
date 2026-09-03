@@ -1,6 +1,6 @@
 # コーディング規約
 
-本ドキュメントは、[MANIFEST.md](MANIFEST.md) で定義された技術スタック・ディレクトリ構成に基づき、
+本ドキュメントは、[manifest.md](manifest.md) で定義された技術スタック・ディレクトリ構成に基づき、
 開発チームが従うべきコーディング規約を定めるものである。
 
 対象スタック（[技術スタック.md](技術スタック.md)より）:
@@ -168,7 +168,7 @@ import type { CreateEventInput } from "@eventboard/shared";
 
 ### ディレクトリ構成
 
-[MANIFEST.md 8章「ディレクトリ構成」](MANIFEST.md)で定義されたfeature-based構成に従う。新規画面・モーダルは対応する
+[MANIFEST.md 8章「ディレクトリ構成」](manifest.md)で定義されたfeature-based構成に従う。新規画面・モーダルは対応する
 `features/*` 配下に配置し、横断的な共通コンポーネントのみ `components/ui/` に置く。
 
 ```
@@ -338,7 +338,7 @@ useEffect(() => {
 
 ### ディレクトリ構成
 
-[MANIFEST.md 8章「ディレクトリ構成」](MANIFEST.md)の通り、NestJSモジュールを[MANIFEST.md 6章](MANIFEST.md)の
+[MANIFEST.md 8章「ディレクトリ構成」](manifest.md)の通り、NestJSモジュールを[MANIFEST.md 6章](manifest.md)の
 主要リソース区分と1:1に対応させる。
 
 ```
@@ -417,7 +417,7 @@ export class EventsController {
 
 ### ルーティング
 
-[MANIFEST.md 6章「設計方針」](MANIFEST.md)のshallow routing方針に従う。
+[MANIFEST.md 6章「設計方針」](manifest.md)のshallow routing方針に従う。
 
 - 親リソースに紐づく「一覧取得・新規作成」はネスト: `/events/:eventId/registrations`
 - IDだけで一意特定できる「単一リソースの取得・更新・削除」はフラット: `/events/:id`, `/feedbacks/:id`
@@ -498,8 +498,8 @@ create(@Body() body: { capacity?: number }) {
 | リレーション名（複数リレーション回避用） | 用途を表す名前 | `@relation("PromotionPromotedUser")` |
 | インデックス | 外部キー・検索頻度の高いカラムに `@@index` | `@@index([organizerId])` |
 
-- 日時は原則 `@db.Timestamptz(3)`（[MANIFEST.md 5.4節](MANIFEST.md)参照）。
-- 現在時刻に依存する制約（過去日時禁止・締切判定等）はPrismaのCHECK制約では表現せず、Service層で判定する（[MANIFEST.md 5.5節](MANIFEST.md)、詳細要求リスト.md 4章「日時に依存するバリデーション」）。
+- 日時は原則 `@db.Timestamptz(3)`（[MANIFEST.md 5.4節](manifest.md)参照）。
+- 現在時刻に依存する制約（過去日時禁止・締切判定等）はPrismaのCHECK制約では表現せず、Service層で判定する（[MANIFEST.md 5.5節](manifest.md)、詳細要求リスト.md 4章「日時に依存するバリデーション」）。
 
 ```prisma
 // Good: 用途が異なる複数のUserリレーションには関係名を明示する
@@ -538,7 +538,7 @@ export class EventsService {
 - 一覧系エンドポイントで各行に紐づく件数（例: `confirmedCount`）を返す場合、対象リレーションを`include`で
   行ごと丸ごと取得してアプリケーション層で`filter`/`find`する実装はしない。行数×紐づく件数でレスポンス
   サイズ・メモリ使用量が線形以上に増えるため、`groupBy`等の集計クエリでDB側に必要な件数のみを計算させる
-  （[MANIFEST.md 6章「設計方針」](MANIFEST.md)）。
+  （[MANIFEST.md 6章「設計方針」](manifest.md)）。
 
 ```ts
 // Good: confirmedCountはgroupByでDB側に集計させ、自分の登録のみ絞り込んで取得する
@@ -573,7 +573,7 @@ return events.map((event) => ({
 ### トランザクション
 
 - 複数テーブルへの書き込みが1つの業務操作として不可分な場合（例: キャンセル時の`Registration`削除 +
-  待機者の繰り上げ + `PromotionHistory`保存）は `prisma.$transaction` でまとめる（[MANIFEST.md 3.6節](MANIFEST.md)）。
+  待機者の繰り上げ + `PromotionHistory`保存）は `prisma.$transaction` でまとめる（[MANIFEST.md 3.6節](manifest.md)）。
 
 ```ts
 // Good: キャンセル・繰り上げ・履歴保存をアトミックに実行
@@ -620,7 +620,7 @@ async cancel(eventId: string, userId: string) {
 
 ### RESTful命名
 
-- リソース名は複数形の名詞（`/events`, `/categories`）。動詞をパスに含めるのは、状態遷移用の専用アクション（`/events/:id/register` 等）のみに限定する（[MANIFEST.md 6章](MANIFEST.md)参照）。
+- リソース名は複数形の名詞（`/events`, `/categories`）。動詞をパスに含めるのは、状態遷移用の専用アクション（`/events/:id/register` 等）のみに限定する（[MANIFEST.md 6章](manifest.md)参照）。
 
 ```
 Good: GET  /events/:eventId/registrations
@@ -631,7 +631,7 @@ Bad:  POST /events/:id/updateRegistrationStatus   （POST /events/:id/register �
 
 ### レスポンス形式
 
-全APIレスポンスは共通のエンベロープ形式に従う（[MANIFEST.md 6章](MANIFEST.md)、実装済み）。
+全APIレスポンスは共通のエンベロープ形式に従う（[MANIFEST.md 6章](manifest.md)、実装済み）。
 
 ```jsonc
 // 成功時
@@ -703,7 +703,7 @@ describe("test1", () => {
 
 - Arrange-Act-Assert (AAA) の3段構成をコメントなしでも読み取れる形で保つ。
 - バックエンドの単体テストではPrismaを実DBに繋がず、`PrismaService` をモック化する。業務ルールの分岐網羅を優先する。
-- 状態遷移・権限まわり（[MANIFEST.md 2章権限マトリクス](MANIFEST.md)、5章ビジネスルール）は最優先でテストを書く。特に**キャンセル待ちの繰り上げ**（3.6節）は排他制御・トランザクションの単体テストを手厚くする。
+- 状態遷移・権限まわり（[MANIFEST.md 2章権限マトリクス](manifest.md)、5章ビジネスルール）は最優先でテストを書く。特に**キャンセル待ちの繰り上げ**（3.6節）は排他制御・トランザクションの単体テストを手厚くする。
 
 ```ts
 // Good: AAAが明確、Prismaはモック
@@ -833,7 +833,7 @@ const jwtSecret = process.env.JWT_ACCESS_SECRET;
 [選定要素提案.md 3章](選定要素提案.md)の決定事項を実装規約として再掲する。
 
 - **パスワード**: bcryptでハッシュ化（コストファクタ10、`AuthService`に実装済み）。平文パスワードをログ・エラーメッセージに含めない。
-- **認証トークン**: Access/Refresh TokenはhttpOnly Cookieのみで管理し、レスポンスボディやlocalStorageに含めない（XSS時のトークン窃取を防ぐ）。Access Tokenのペイロードは`{ sub: userId }`のみとし`role`は含めない（[MANIFEST.md 3.1節](MANIFEST.md)）。
+- **認証トークン**: Access/Refresh TokenはhttpOnly Cookieのみで管理し、レスポンスボディやlocalStorageに含めない（XSS時のトークン窃取を防ぐ）。Access Tokenのペイロードは`{ sub: userId }`のみとし`role`は含めない（[MANIFEST.md 3.1節](manifest.md)）。
 - **認可**: 全ての保護対象エンドポイントで `JwtAuthGuard` + CASLの `PoliciesGuard` を通す。Controllerに認可ロジックを個別実装しない（`common/casl`に集約）。
 - **SQLインジェクション**: Prismaの型安全なクエリビルダを使い、生SQL（`$queryRawUnsafe`）は使用しない。CHECK制約追加等でどうしても生SQLが必要な場合は `$queryRaw`（タグ付きテンプレート）を使いプレースホルダで値を渡す。
 
@@ -867,8 +867,8 @@ PRを提出・レビューする際は以下を確認する。
 
 **設計・アーキテクチャ**
 - [ ] Controller/Service/PrismaServiceの責務分離が守られているか（3章）
-- [ ] 状態遷移・業務ルールの分岐が[MANIFEST.md 5章「データモデリング」](MANIFEST.md)と一致しているか
-- [ ] 新規APIが[MANIFEST.md 6章](MANIFEST.md)の命名・レスポンス形式・ステータスコード規約に沿っているか
+- [ ] 状態遷移・業務ルールの分岐が[MANIFEST.md 5章「データモデリング」](manifest.md)と一致しているか
+- [ ] 新規APIが[MANIFEST.md 6章](manifest.md)の命名・レスポンス形式・ステータスコード規約に沿っているか
 
 **型・バリデーション**
 - [ ] `any` を使っていないか、`packages/shared` のZodスキーマを再利用しているか（1章・3章）

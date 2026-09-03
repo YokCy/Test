@@ -1,7 +1,7 @@
 # E2Eテスト観点リスト
 
 [画面設計仕様.md](./画面設計仕様.md)3章（画面レイアウト・状態遷移図・3.4節UI/UX設計方針）と
-[MANIFEST.md](./MANIFEST.md)「4. 画面遷移・構成」を基にした、Playwright E2Eテストの観点リスト。
+[docs/manifest.md](docs/manifest.md)「4. 画面遷移・構成」を基にした、Playwright E2Eテストの観点リスト。
 [test-agent](.claude/agents/test-agent.md)のE2Eガイドライン（`data-testid`セレクタ、自動待機、
 画面横断のゴールデンパスに絞る方針）に沿って、ユニットテスト（Jest/Vitest）ではカバーしきれない
 「複数画面・複数ユーザーをまたぐ一連の操作」に対象を絞る。個々の画面・コンポーネント単位の分岐は

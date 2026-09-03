@@ -864,7 +864,7 @@ packages/shared/
 ```
 
 イベント関連の新規モジュールは`backend/src/modules/{categories,events,registrations,feedbacks}`の
-ように機能単位で追加していく（詳細は[CODING_STANDARDS.md](./CODING_STANDARDS.md) 2章・3章参照）。
+ように機能単位で追加していく（詳細は[coding_standards.md](coding_standards.md) 2章・3章参照）。
 
 ---
 

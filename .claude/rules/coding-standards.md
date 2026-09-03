@@ -16,9 +16,9 @@ paths: "**/*"
 ## 目的(何のために)
 
 - チーム全体でコードの書き方・命名規則・設計方針を統一するため
-- [MANIFEST.md](../../MANIFEST.md) で定義された技術スタック・ディレクトリ構成との一貫性を保つため
+- [MANIFEST.md](../../docs/manifest.md) で定義された技術スタック・ディレクトリ構成との一貫性を保つため
 - セキュリティ・品質上の問題(バリデーション漏れ、認可漏れ等)を未然に防ぐため
 
 ## 参照ファイル
 
-[CODING_STANDARDS.md](../../CODING_STANDARDS.md) を参照すること。
+[CODING_STANDARDS.md](../../docs/coding_standards.md) を参照すること。

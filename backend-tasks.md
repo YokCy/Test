@@ -1,6 +1,6 @@
 # バックエンド実装タスクリスト
 
-[MANIFEST.md](MANIFEST.md)「5. データモデリング」「6. API設計」、[画面設計仕様.md](画面設計仕様.md)に基づく、
+[docs/manifest.md](docs/manifest.md)「5. データモデリング」「6. API設計」、[画面設計仕様.md](画面設計仕様.md)に基づく、
 バックエンド全体の実装タスク一覧。各タスクは概ね15分以内で完了できる粒度に分割している。
 完了したタスクは `[ ]` を `[x]` に変更して更新すること。
 
@@ -59,7 +59,7 @@ Phase 12で結合確認する。
 > このPhaseは全ての新規モジュールが依存する共通の土台のため、並列実装の前に必ず完了させる。
 > 1人が担当し、完了後にPhase 6〜10を複数人/複数エージェントへ割り当てる。
 
-- [x] 5.1 `schema.prisma`に`RegistrationStatus`/`AttendanceStatus` Enumを追加する（[MANIFEST.md 5.4節](MANIFEST.md)）
+- [x] 5.1 `schema.prisma`に`RegistrationStatus`/`AttendanceStatus` Enumを追加する（[MANIFEST.md 5.4節](docs/manifest.md)）
 - [x] 5.2 `Category`モデルを追加する
 - [x] 5.3 `Tag`・`EventTag`モデルを追加する
 - [x] 5.4 `Event`モデルを追加する（`categoryId`/`organizerId`の`onDelete: Restrict`含む）
@@ -107,7 +107,7 @@ Phase 12で結合確認する。
 - [x] 8.3 `POST /events/:id/register`を実装する（過去イベント`400`、締切超過`400`、主催者本人`409`、二重登録`409`）
 - [x] 8.4 待機登録時の`position`採番ロジック（当該イベントの現在最大`position` + 1）を実装する
 - [x] 8.5 `POST /events/:id/cancel`を実装する（本人はキャンセル期限内のみ、adminは`userId`指定で期限無視の強制キャンセル）
-- [x] 8.6 キャンセル時の繰り上げトランザクションを実装する（イベント行ロック→`Registration`削除→先頭待機者昇格→`PromotionHistory`保存、[MANIFEST.md 3.6節](MANIFEST.md)）
+- [x] 8.6 キャンセル時の繰り上げトランザクションを実装する（イベント行ロック→`Registration`削除→先頭待機者昇格→`PromotionHistory`保存、[MANIFEST.md 3.6節](docs/manifest.md)）
 - [x] 8.7 `GET /events/:id/registrations`を実装する（主催者本人/admin限定、出席状態含む）
 - [x] 8.8 `PUT /events/:id/registrations/:userId/attendance`を実装する（開催日時前`400`、主催者本人/admin限定、マーク後の変更許可）
 - [x] 8.9 ~~`CaslAbilityFactory`に`Registration` subjectの権限判定を追加する~~ → Phase 7と同じ理由でCASLでは判定せず、`RegistrationsService`内の手動チェック（主催者本人/admin、または本人の登録か）に統一した
