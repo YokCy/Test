@@ -531,6 +531,45 @@ export class EventsService {
 
 - 開発環境ではクエリログ（`log: ["query", "warn", "error"]`）を有効化し、本番相当では `warn`/`error` のみに絞る。
 
+### クエリ設計（N+1・全件取得対策）
+
+- ループ内で`findUnique`/`findMany`等を個別に呼ぶ実装（真性N+1）はしない。配列に対する集計・存在確認が
+  必要な場合は`in`条件でまとめて取得するか、`groupBy`/`_count`で1クエリに集約する。
+- 一覧系エンドポイントで各行に紐づく件数（例: `confirmedCount`）を返す場合、対象リレーションを`include`で
+  行ごと丸ごと取得してアプリケーション層で`filter`/`find`する実装はしない。行数×紐づく件数でレスポンス
+  サイズ・メモリ使用量が線形以上に増えるため、`groupBy`等の集計クエリでDB側に必要な件数のみを計算させる
+  （[MANIFEST.md 6章「設計方針」](MANIFEST.md)）。
+
+```ts
+// Good: confirmedCountはgroupByでDB側に集計させ、自分の登録のみ絞り込んで取得する
+const events = await this.prisma.event.findMany({ where, include: { category: true } });
+const eventIds = events.map((event) => event.id);
+const [confirmedCounts, myRegistrations] = await Promise.all([
+  this.prisma.registration.groupBy({
+    by: ["eventId"],
+    where: { eventId: { in: eventIds }, status: "CONFIRMED" },
+    _count: { _all: true },
+  }),
+  this.prisma.registration.findMany({
+    where: { eventId: { in: eventIds }, userId: user.id },
+    select: { eventId: true, status: true },
+  }),
+]);
+```
+
+```ts
+// Bad: 全イベントの参加登録行を丸ごとincludeし、JS側でfilter/findして集計する
+// （イベント数×参加者数でレスポンス・メモリ使用量が増える。修正前のEventsService.findAllで実際に発生した問題）
+const events = await this.prisma.event.findMany({
+  where,
+  include: { category: true, registrations: true },
+});
+return events.map((event) => ({
+  confirmedCount: event.registrations.filter((r) => r.status === "CONFIRMED").length,
+  myRegistration: event.registrations.find((r) => r.userId === user.id) ?? null,
+}));
+```
+
 ### トランザクション
 
 - 複数テーブルへの書き込みが1つの業務操作として不可分な場合（例: キャンセル時の`Registration`削除 +
@@ -843,6 +882,7 @@ PRを提出・レビューする際は以下を確認する。
 **データベース**
 - [ ] Prismaスキーマ変更時、命名規則（4章）に沿っているか
 - [ ] 複数テーブルにまたがる書き込み（特にキャンセル待ちの繰り上げ）が `$transaction` でまとめられているか
+- [ ] ループ内での個別クエリ（N+1）、一覧系エンドポイントでの行ごとのリレーション全件includeが無いか（4章「クエリ設計」）
 
 **テスト**
 - [ ] 業務ルールの分岐（特に`409`となる異常系、キャンセル待ちの繰り上げ）にテストが追加されているか（6章）
