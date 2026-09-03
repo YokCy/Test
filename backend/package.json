@@ -11,7 +11,8 @@
     "test:report": "jest --verbose > test-results/backend-test-result.txt 2>&1",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "prisma:seed:sample-events": "ts-node prisma/seed-sample-events.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
