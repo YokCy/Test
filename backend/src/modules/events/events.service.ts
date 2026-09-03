@@ -60,16 +60,32 @@ export class EventsService {
 
     const events = await this.prisma.event.findMany({
       where,
-      include: {
-        category: true,
-        registrations: true,
-      },
+      include: { category: true },
       orderBy: { startAt: query.sort === "startAtDesc" ? "desc" : "asc" },
     });
+    const eventIds = events.map((event) => event.id);
+
+    // WHY: 一覧画面が必要とするのは「確定人数」と「自分の登録有無」のみ。全イベントの
+    // 参加登録行を丸ごとincludeしてJS側でfilter/findすると、イベント数×参加者数でレスポンスが
+    // 肥大化するため、confirmedCountは`groupBy`で、myRegistrationは自分の分のみに絞って取得する
+    // （`MyPageService.getOrganizingEvents`と同じ集計パターン）。
+    const [confirmedCounts, myRegistrations] = await Promise.all([
+      this.prisma.registration.groupBy({
+        by: ["eventId"],
+        where: { eventId: { in: eventIds }, status: "CONFIRMED" },
+        _count: { _all: true },
+      }),
+      this.prisma.registration.findMany({
+        where: { eventId: { in: eventIds }, userId: user.id },
+        select: { eventId: true, status: true },
+      }),
+    ]);
+    const confirmedCountByEventId = new Map(confirmedCounts.map((row) => [row.eventId, row._count._all]));
+    const myRegistrationByEventId = new Map(myRegistrations.map((registration) => [registration.eventId, registration]));
 
     return events.map((event) => {
-      const confirmedCount = event.registrations.filter((r) => r.status === "CONFIRMED").length;
-      const myRegistration = event.registrations.find((r) => r.userId === user.id) ?? null;
+      const confirmedCount = confirmedCountByEventId.get(event.id) ?? 0;
+      const myRegistration = myRegistrationByEventId.get(event.id) ?? null;
 
       return {
         id: event.id,

@@ -28,6 +28,8 @@ interface PrismaMock {
   };
   registration: {
     count: jest.Mock;
+    groupBy: jest.Mock;
+    findMany: jest.Mock;
   };
   feedback: {
     aggregate: jest.Mock;
@@ -55,6 +57,11 @@ function createPrismaMock(): PrismaMock {
     },
     registration: {
       count: jest.fn(),
+      // WHY: findAllは全イベントの登録行をincludeせず、confirmedCount/myRegistrationをそれぞれ
+      // groupBy/findManyで別途取得する（N+1・レスポンス肥大化対策）。既定は「登録0件」相当の空配列とし、
+      // 個々のテストで挙動を確認したい場合のみ`mockResolvedValueOnce`で上書きする。
+      groupBy: jest.fn().mockResolvedValue([]),
+      findMany: jest.fn().mockResolvedValue([]),
     },
     feedback: {
       aggregate: jest.fn(),
@@ -102,13 +109,12 @@ interface RegistrationFixture {
   status: "CONFIRMED" | "WAITLISTED";
 }
 
-/** `findAll`用の最小限のイベント行フィクスチャ。 */
+/** `findAll`用の最小限のイベント行フィクスチャ（`registrations`はincludeしなくなったため含まない）。 */
 function buildEventListRow(overrides: {
   id?: string;
   organizerId?: string;
   startAt?: Date;
   registrationDeadline?: Date | null;
-  registrations?: RegistrationFixture[];
 } = {}) {
   return {
     id: overrides.id ?? "event-1",
@@ -118,8 +124,24 @@ function buildEventListRow(overrides: {
     category: { id: "cat-1", name: "勉強会" },
     organizerId: overrides.organizerId ?? ORGANIZER_ID,
     registrationDeadline: overrides.registrationDeadline ?? null,
-    registrations: overrides.registrations ?? [],
   };
+}
+
+/**
+ * `findAll`が`registration.groupBy`（確定人数の集計）と`registration.findMany`
+ * （実行者自身の登録取得）へ振り分けた結果を、指定したイベント1件分についてモックする。
+ */
+function stubRegistrationSummary(
+  prisma: PrismaMock,
+  options: { eventId?: string; confirmedCount?: number; myRegistration?: RegistrationFixture } = {},
+): void {
+  const eventId = options.eventId ?? "event-1";
+  if (options.confirmedCount !== undefined) {
+    prisma.registration.groupBy.mockResolvedValue([{ eventId, _count: { _all: options.confirmedCount } }]);
+  }
+  if (options.myRegistration !== undefined) {
+    prisma.registration.findMany.mockResolvedValue([{ eventId, status: options.myRegistration.status }]);
+  }
 }
 
 /** `findOne`用の詳細イベント行フィクスチャ（`category`/`organizer`/`eventTags`/`registrations`を含む）。 */
@@ -238,34 +260,33 @@ describe("EventsService", () => {
       expect(args.where).toMatchObject({ deletedAt: null });
     });
 
-    it("confirmedCountはCONFIRMEDの登録件数のみをカウントすること（WAITLISTEDは含めない）", async () => {
-      prisma.event.findMany.mockResolvedValue([
-        buildEventListRow({
-          registrations: [
-            { userId: "a", status: "CONFIRMED" },
-            { userId: "b", status: "CONFIRMED" },
-            { userId: "c", status: "WAITLISTED" },
-          ],
-        }),
-      ]);
+    it("confirmedCountはgroupByが返したCONFIRMED件数をそのまま反映すること（WAITLISTEDはgroupByのwhereで除外済み）", async () => {
+      prisma.event.findMany.mockResolvedValue([buildEventListRow()]);
+      stubRegistrationSummary(prisma, { confirmedCount: 2 });
 
       const result = await service.findAll(buildAuthUser(), {});
 
       expect(result[0]?.confirmedCount).toBe(2);
+      const args = firstCallArg<{ where: Record<string, unknown> }>(prisma.registration.groupBy);
+      expect(args.where).toMatchObject({ status: "CONFIRMED" });
+    });
+
+    it("該当イベントの確定登録が無い場合、groupByの結果に含まれずconfirmedCountは0になること", async () => {
+      prisma.event.findMany.mockResolvedValue([buildEventListRow()]);
+
+      const result = await service.findAll(buildAuthUser(), {});
+
+      expect(result[0]?.confirmedCount).toBe(0);
     });
   });
 
   describe("registrationState計算（findAll/findOne共通ロジック）", () => {
     it("実行者がorganizerIdと一致する場合はORGANIZERになること（Registration有無より優先）", async () => {
       const user = buildAuthUser({ id: ORGANIZER_ID });
-      prisma.event.findMany.mockResolvedValue([
-        buildEventListRow({
-          organizerId: ORGANIZER_ID,
-          // WHY: 実データでは主催者はRegistration行を持たないが、優先順位を明示的に検証するため
-          // あえて同一ユーザーのRegistrationも存在する状態を作る。
-          registrations: [{ userId: ORGANIZER_ID, status: "CONFIRMED" }],
-        }),
-      ]);
+      prisma.event.findMany.mockResolvedValue([buildEventListRow({ organizerId: ORGANIZER_ID })]);
+      // WHY: 実データでは主催者はRegistration行を持たないが、優先順位を明示的に検証するため
+      // あえて同一ユーザーのRegistrationも存在する状態を作る。
+      stubRegistrationSummary(prisma, { myRegistration: { userId: ORGANIZER_ID, status: "CONFIRMED" } });
 
       const result = await service.findAll(user, {});
 
@@ -274,9 +295,8 @@ describe("EventsService", () => {
 
     it("実行者にCONFIRMEDのRegistrationがある場合はCONFIRMEDになること", async () => {
       const user = buildAuthUser({ id: OTHER_MEMBER_ID });
-      prisma.event.findMany.mockResolvedValue([
-        buildEventListRow({ registrations: [{ userId: OTHER_MEMBER_ID, status: "CONFIRMED" }] }),
-      ]);
+      prisma.event.findMany.mockResolvedValue([buildEventListRow()]);
+      stubRegistrationSummary(prisma, { myRegistration: { userId: OTHER_MEMBER_ID, status: "CONFIRMED" } });
 
       const result = await service.findAll(user, {});
 
@@ -285,9 +305,8 @@ describe("EventsService", () => {
 
     it("実行者にWAITLISTEDのRegistrationがある場合はWAITLISTEDになること", async () => {
       const user = buildAuthUser({ id: OTHER_MEMBER_ID });
-      prisma.event.findMany.mockResolvedValue([
-        buildEventListRow({ registrations: [{ userId: OTHER_MEMBER_ID, status: "WAITLISTED" }] }),
-      ]);
+      prisma.event.findMany.mockResolvedValue([buildEventListRow()]);
+      stubRegistrationSummary(prisma, { myRegistration: { userId: OTHER_MEMBER_ID, status: "WAITLISTED" } });
 
       const result = await service.findAll(user, {});
 
@@ -300,7 +319,6 @@ describe("EventsService", () => {
         buildEventListRow({
           startAt: FUTURE_START_AT,
           registrationDeadline: new Date("2026-01-10T00:00:00.000Z"), // NOWより過去
-          registrations: [],
         }),
       ]);
 
@@ -315,7 +333,6 @@ describe("EventsService", () => {
         buildEventListRow({
           startAt: PAST_START_AT,
           registrationDeadline: null,
-          registrations: [],
         }),
       ]);
 
@@ -330,7 +347,6 @@ describe("EventsService", () => {
         buildEventListRow({
           startAt: FUTURE_START_AT,
           registrationDeadline: null,
-          registrations: [],
         }),
       ]);
 
